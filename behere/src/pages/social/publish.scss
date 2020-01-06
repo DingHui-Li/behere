@@ -1,0 +1,172 @@
+#publish{
+    position: relative;
+    width: 100%;
+    background-color: #fff;
+    padding:10px 20px;
+    overflow: hidden;
+    .logo{
+        width:100px;
+        margin-bottom: 10px;
+        img{
+            width:100%;
+        }
+    }
+    .video-container{
+        width: 100%;
+        position: relative;
+        margin-top: 20px;
+        video{
+            width: 100%;
+        }
+        .remove-video{
+            position: absolute;
+            top:0;
+            right:0;
+            z-index: 9;
+            background-color: rgba(255,255,255,.4);
+            width: 30px;
+            height:30px;
+        }
+    }
+    .voices{
+        width: 100%;
+        position: relative;
+        padding-top:20px; 
+        .help{
+            position: absolute;
+            top:5px;
+            right:0;
+            font-size: 1.2rem;
+            z-index:9;
+        }
+    }
+    .imgs{
+        width:100%;
+        position: relative;
+        padding-top:15px;
+        overflow: hidden;
+        .img-drag{
+            overflow: hidden;
+        }
+        .help{
+            position: absolute;
+            top:0;
+            right:0;
+            font-size: 1.2rem;
+        }
+        .ghost{
+            //box-shadow: 4px 4px 8px 4px rgba(0,0,0,.3);
+            background-color: rgba(0,0,0,.2);
+        }
+        .col{
+            padding:5px !important;
+            display: inline-block !important;
+            position: relative;
+        }
+        .img{
+            width:100%;
+            height:100%;
+        }
+        .remove-img{
+            position: absolute;
+            top:6px;
+            right:6px;
+            z-index: 9;
+            background-color: rgba(255,255,255,.4);
+            width: 30px;
+            height:30px;
+        }
+        .add-img{
+            width: 100%;
+            height:100%;
+            border:4px dashed #959595;
+            padding:20%;
+            box-sizing: border-box;
+            overflow: hidden;
+            position: relative;
+            .circle{
+                width:100%;
+                height: 100%;
+                border:4px solid #959595;
+                border-radius: 50%;
+                position: relative;
+                .icon{
+                    position: absolute;
+                    left:50%;
+                    top:50%;
+                    transform: translate(-50%,-50%);
+                    font-size: 2rem;
+                    color:#959595;
+                }
+            }
+        }
+    }
+    .selectBtn{
+        color:#fff;
+        position: relative;
+        float:right;      
+        right:20px;
+    }
+    .submitBtn{
+        position: relative;
+        float:right;
+        color:#fff;
+        min-width:90px;
+        background-color: #3F51B5;
+    }
+    .uploading{
+        width:100%;
+        height:100%;
+        position: absolute;
+        background-color:rgba(255,255,255);
+        top:0;
+        left:0;
+        z-index: 9;
+        padding:20px 15%;
+        box-sizing: border-box;
+        .uploading-container{
+            background-color: rgba(0,0,0,.2);;
+            width: 100%;
+            position: relative;
+            top:50%;
+            transform: translateY(-50%);
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding:10px;
+            border-radius: 5px;
+            color:#757575;
+            .progress{
+                font-size: 1.5rem;
+            }
+        }
+    }
+}
+.selectVisibility{
+    position: relative;
+    .item{
+        position: relative;
+        min-width: 200px;
+        span{
+            color:#fff;
+        }
+        .icon{
+            color:#fff;
+            position: absolute;
+            font-size: 1rem;
+            right:20px;
+        }
+    }
+}
+.voice-enter,.voice-leave-to{
+    transform: scale(0);
+}
+.voice-enter-to,.voice-leave{
+    transform: scale(1)
+}
+.voice-enter-active ,.list-leave-active{
+    transition: all .5s;
+}
+.voice-move{
+    transition: transform .5s;
+}

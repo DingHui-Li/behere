@@ -1,0 +1,214 @@
+#login{
+    height:100vh;
+    width:100vw;
+    .left{
+        height:100%;
+        position: relative;
+        overflow: hidden;
+        top:0;
+        .side{
+            position: relative;
+            background-color: #fed03d;
+            height:100%;
+            .logo-container{
+                position: absolute;
+                margin-top:30px;
+                margin-left:50%;
+                transform: translateX(-50%);
+                .logo{
+                    display: block;
+                };
+                .slogan{
+                    margin-top: 60px;
+                }
+            }
+        };
+        .people{
+            position: absolute;
+            width: 100%;
+            max-width: 700px;
+            top:50%;
+            left:50%;
+            transform: translate(-50%,-50%);
+        }
+    };
+    .right{
+        height:100%;
+        position: relative;
+        .login-panel{
+            position: absolute;
+            top:50%;
+            transform: translateY(-50%);
+            color: #333333;
+            padding: 50px !important;
+            border-radius: 10px;
+            box-sizing: border-box;
+            .title{
+                font: {
+                    size:24px;
+                    family:造字工房力黑常规体 !important;
+                }
+            };
+            .icon-container{
+                width:100%;
+                padding-right: 50px;
+                position: relative;
+                overflow: hidden;
+                .icon{
+                    float: right;
+                    width: 40px;
+                    height:40px;
+                    margin:10px;
+                    filter: grayscale(100%);
+                }
+                .wx{
+                    filter: grayscale(0);
+                }
+            };
+            .divider{
+                color:'#959595';
+                margin:20px 0
+            }
+            .tiptext{
+                margin-bottom: 10px;
+                font: {
+                    size:1rem;
+                    family:造字工房力黑常规体;
+                }
+            };
+            
+            .input,#login_password{
+                font-family: normal;
+                outline: none;
+                border:none;
+                background-color: #eeeeee;
+                border-radius: 10px;
+                height:30px;
+                width:100%;
+            };
+            .btn-container{
+                margin-top:20px;
+                text-align: center;
+                width: 100%;
+                position: relative;
+                .btn{
+                    width: 160px;
+                    max-width: 90%;
+                    height:40px;
+                    border-radius: 20px;
+                    position: relative;
+                    color:#FF9800;
+                    .v-btn__content{
+                        font-weight: bold !important;
+                        font-family:造字工房力黑常规体 !important;
+                    }
+                };
+                .btn-register{
+                    background-color: #e0e0e0;
+                    color:#757575;
+                };
+                .btn-login{
+                    background-color: #fed03d;
+                }
+            }
+            .v-messages__message{
+                font-family:造字工房力黑常规体 !important;
+                font-size: 0.9rem;
+            }
+        }
+    }
+}
+
+@font-face{
+    font-family:'造字工房力黑常规体';
+    src:url('../..//assets/font/造字工房力黑常规体.ttf')
+}
+
+.col{
+    padding:0 !important;
+}
+.register-card{
+    padding: 20px 40px;
+    .tit{
+        text-align: center;
+        font-weight: bold ;
+        font-family: 造字工房力黑常规体;
+        font-size: 1.2rem;
+        color: #454545;
+    }
+    .divider{
+        margin: 20px 0;
+    }
+    .icon-container{
+        width:100%;
+        text-align: center;
+        width:auto;
+        text-align: center;
+        .icon{
+            width: 40px;
+            height:40px;
+            margin:10px;
+            filter: grayscale(100%);
+        }
+        .wx{
+            filter: grayscale(0);
+        }
+    };
+    .tiptext{
+        margin-bottom:10px;
+        font: {
+            family:造字工房力黑常规体;
+        }
+    };
+    .btns{
+        margin:20px 0;
+        .btn{
+            width: 80%;
+            left:50%;
+            transform: translateX(-50%);
+            background-color: #fed03d !important;
+            border-radius: 20px !important;
+            color:#FF9800 !important;
+            .v-btn__content{
+                font-weight: bold !important;
+                font-family:造字工房力黑常规体 !important;
+            }
+        }
+        .cancel{
+            background-color: #e0e0e0 !important;
+            color:#454545 !important
+        }
+    }
+    .v-messages__message{
+        font-family:造字工房力黑常规体 !important;
+        font-size: 0.9rem;
+    }
+}
+
+.qr-card{
+    max-height: 400px;
+    position: relative;
+    .loading{
+        position: relative;
+        margin-bottom:10px ;
+    }
+    .text{
+        width:100%;
+        text-align: center;
+        font-weight: bold;
+        font-size: 1.4rem;
+        font-family: 造字工房力黑常规体;
+        padding:20px 0;
+    }
+    .img{
+        width: 100%;
+    }
+}
+
+.v-text-field--outlined fieldset{
+    border:1px solid #e6e6e6 !important;
+    background-color: #e0e0e0;
+}
+.v-input__append-inner{
+    z-index: 1;
+}
