@@ -36,10 +36,15 @@ const store=new Vuex.Store({
         openChat:null,//已打开的聊天界面的对方id或群id
         openFriend:null,//打开的好友资料
         chatList:[],//会话列表
+        updateChatList:false,//更新会话列表
         friendList:[],//好友列表
         updateFriendList:false,//更新好友列表
         friendGroup:[],//好友分组
-        friendApply:[],//好友申请
+        friendApplyNum:0,//未处理的好友申请数量
+        groups:[],//群组
+        updateGroups:false,//更新群组
+        groupApplyNum:0,//群组 未处理数 申请&邀请
+        socialNum:0,//朋友圈通知数
     },
     mutations:{
         updateMyInfo(state,data){
@@ -101,6 +106,7 @@ const store=new Vuex.Store({
         newMsg(state,data){//新消息
             if(Array.isArray(data)){//只有发送 才会有数组的情况 （一次发送多张图片 会分解为一个个消息）
                 for(let i=0;i<data.length;i++){
+                    data[i].sendTime=data[i].time;
                     state.msgData.push(data[i]);
                 }
                 let i=exist(data[0]);
@@ -124,15 +130,28 @@ const store=new Vuex.Store({
                 }
                 if((data.type==='callVideo'||data.type==='callPhone')&&data.from!==state.myInfo.id){
                     state.mediaReq.push(data);
+                    if(data.from===state.openChat){
+                        state.msgData.push(data);
+                        if(state.msgData.length>20) state.msgData.shift();
+                    }
                 }else{
-                    if(data.from!==state.openChat&&data.from!==state.myInfo.id){//显示通知 没有打开会话，且排除自己 
+                    if(((data.from!==state.openChat&&data.to!==state.openChat)||data.route!=='msg')&&data.from!==state.myInfo.id){//显示通知 没有打开会话
+                        if(data.mute) return;//不提醒
                         if(state.alertMsg.length>=3){
                             state.alertMsg.shift();
                         }
                         state.chatList[i].unreadNum+=1;
+                        for(let chat of state.chatList){
+                            if(chat.contactSn===data.from||chat.contactSn===data.to){
+                                data.name=chat.remark?chat.remark:chat.nickName;
+                                data.avatar=chat.profilePhoto;
+                                break;
+                            }
+                        }
                         state.alertMsg.push(data);//消息通知
                     }else{
                         state.msgData.push(data);
+                        if(state.msgData.length>20) state.msgData.shift();
                         if(i) state.chatList[i].unreadNum=0;
                     }
                 }
@@ -155,8 +174,11 @@ const store=new Vuex.Store({
             }
         },
         updateOpenChat(state,id){//更新打开的会话
-            state.openChat=id;
-            state.msgData=[];
+            if(id!==state.openChat){//没有打开会话
+                state.openChat=id;
+                state.msgData=[];
+            }
+            if(!id) return;
             for(let i in state.chatList){
                 if(state.chatList[i].contactSn===id){//清空打开会话的未读消息数
                     state.chatList[i].unreadNum=0;
@@ -168,8 +190,15 @@ const store=new Vuex.Store({
             state.openFriend=id;
         },
 
-        setChatList(state,data){//获取会话列表
+        setChatList(state,data){//设置会话列表
             state.chatList=data;
+        },
+        updateChatListField(state,data){//{id,fied,value}
+            for(let i in state.chatList){
+                if(state.chatList[i].sn===data.id){
+                    state.chatList[i][data.field]=data.value;
+                }
+            }
         },
         removeChatList(state,id){
             for(let i in state.chatList){
@@ -181,6 +210,9 @@ const store=new Vuex.Store({
         addChatList(state,data){
             state.chatList.unshift(data);
         },
+        setUpdateChatList(state,status){
+            state.updateChatList=status;
+        },
 
         setFriendList(state,data){//获取好友列表
             state.friendList=data;
@@ -190,7 +222,7 @@ const store=new Vuex.Store({
         },
         removeFriend(state,id){//移除一个朋友
             for(let i in state.friendList){
-                if(state.friendList.userSn===id){
+                if(state.friendList[i].userSn===id){
                     state.friendList.splice(i,1);
                     break;
                 }
@@ -238,6 +270,7 @@ const store=new Vuex.Store({
             //data.reverse();
             for(let i in data){
                 data[i].id=data[i].sn;
+                data[i].time=data[i].sendTime;
                 state.msgData.unshift(data[i]);
             }
             
@@ -248,14 +281,71 @@ const store=new Vuex.Store({
                 state.alertFriendApply.unshift();
             }
             state.alertFriendApply.push(data);
-            state.friendApply.unshift(data);//添加到好友申请列表
+            if(data.type==='sys_personal_add'){
+                state.friendApplyNum+=1;
+            }
+            else{
+                state.groupApplyNum+=1;
+            }
         },
         removeAlterFriendApply(state,index){//移除一条好友申请通知
             state.alertFriendApply.splice(index,1);
         },
-        setFriendApply(state,data){//设置好友申请列表数据
-            state.friendApply=data;
+
+        setFriendApplyNum(state,num){
+            try{
+                state.friendApplyNum=parseInt(num);
+            }catch(err){
+                state.friendApplyNum=0;
+            }
+            
         },
+        reduceFriendApplyNum(state){
+            state.friendApplyNum-=1;
+        },
+
+        setGroups(state,data){
+            state.groups=data;
+        },
+        removeGroup(state,id){//退出群聊
+            for(let i in state.groups){
+                if(state.groups[i].sn===id){
+                    state.groups.splice(i,1)
+                }
+            }
+        },
+        updateGroupsItem(state,data){//{id,field,value}
+            for(let i in state.groups){//更新群组列表
+                if(state.groups[i].sn===data.id){
+                    state.groups[i][data.field]=data.value;
+                    break;
+                }
+            }
+            for(let i in state.chatList){//更新会话列表
+                if(state.chatList[i].contactSn===data.id){
+                    if(data.field==='groupName'){
+                        state.chatList[i].nickName=data.value
+                    }else{
+                        state.chatList[i].profilePhoto=data.value
+                    }
+                    break;
+                }
+            }
+            
+        },
+        setUpdateGroups(state,status){
+            state.updateGroups=status;
+        },
+        setGroupApplyNum(state,num){
+            state.groupApplyNum=num;
+        },
+        reduceGroupApplyNum(state){
+            state.groupApplyNum-=1;
+        },
+        
+        setSocialNum(state,num){
+            state.socialNum=num
+        }
     }
 })
 export default store;

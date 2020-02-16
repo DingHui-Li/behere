@@ -6,17 +6,20 @@
             </v-col>
             <v-col sm='12' md='11' lg='10' xl='8' class="content-container" >
                 <v-row>
-                    <v-col xs='12' sm='3' class="sidebar" :style="{padding:size==='xs'?'0':'12px'}">
+                    <v-col xs='12' sm='3' class="sidebar">
                         <Sidebar />
                     </v-col>
-                    <v-col xs='12' sm='9' class="content" :style="{padding:size==='xs'?'0':'12px'}">
-                        <Content />
+                    <v-col xs='12' sm='9' lg='8' xl='7' class="content">
+                        <keep-alive>
+                            <router-view></router-view>
+                        </keep-alive>
                     </v-col>
                 </v-row>
             </v-col>
         </v-row>
         <v-btn fab class="topBtn" @click="handleScrollTop"><v-icon class="icon">mdi-arrow-up-thick</v-icon></v-btn>
-        <div class="side-left" :style="{backgroundColor:theme}" @click="$router.back()" v-ripple>
+        <div class="side-left" :style="{backgroundColor:theme}" @click="$router.replace('/')" v-ripple>
+            <div class="badge" v-show='chatNum'>{{chatNum>99?99:chatNum}}</div>
             <v-icon class="icon">mdi-chevron-double-left</v-icon>
         </div>
     </v-container>
@@ -25,9 +28,8 @@
 <script>
 import Topbar from './topbar'
 import Sidebar from './sidebar'
-import Content from './content'
 export default {
-    components:{Topbar,Sidebar,Content},
+    components:{Topbar,Sidebar},
     data(){
         return{
             
@@ -39,7 +41,15 @@ export default {
         },
         size(){
             return this.$vuetify.breakpoint.name;
-        }
+        },
+        chatNum(){
+            let num=0;
+            let chatList=this.$store.state.chatList;
+            for(let chat of chatList){
+                num+=chat.unreadNum;
+            }
+            return num+this.$store.state.friendApplyNum+this.$store.state.groupApplyNum;
+        },
     },
     methods:{
         handleScrollTop(){
@@ -54,6 +64,7 @@ export default {
         padding: 0;
         margin:0;
         position: relative;
+        animation-timing-function: ease-out;
         .row{
             margin:0;
         }
@@ -73,7 +84,29 @@ export default {
         }
         .content-container{
             margin-top:70px;
-            padding: 0;
+            padding: 20px;
+            .sidebar{
+                padding:0;
+                padding-right: 20px;
+            }
+            .content{
+                //min-width: 850px;
+                overflow: hidden;
+                padding:20px;
+                padding-bottom: 0;
+                position: relative;
+                border-radius: 10px;
+                &::after{
+                    position: absolute;
+                    content: '';
+                    width:100%;
+                    height:100%;
+                    left:0;
+                    top:0;
+                    background-color: rgba(0, 0, 0, 0.2);
+                    z-index:0;
+                }
+            }
         }
         .side-left{
             position: fixed;
@@ -81,12 +114,21 @@ export default {
             filter: brightness(85%);
             height:100vh;
             top:0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            .badge{
+                    width:25px;
+                    height:25px;
+                    background-color: red;
+                    border-radius: 50%;
+                    text-align: center;
+                    line-height: 25px;
+                    font-size: 0.8rem;
+                    color:#fff;
+                }
             .icon{
                 color:#fff;
-                position: absolute;
-                top: 50%;
-                left:50%;
-                transform: translate(-50%,-50%)
             }
         }
     }

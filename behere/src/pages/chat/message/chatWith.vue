@@ -1,15 +1,43 @@
 <template>
     <div id='chat-with' ref='withChat'>
         <div class="topbar">
-            <div class="name">{{userInfo.name}}</div>
+            <div class="name">
+                {{chatInfo.name}} 
+                <span v-if='chatInfo.count'>({{chatInfo.count}})</span>
+            </div>
+            <v-btn icon :style="{float:'right'}" v-if='chatInfo.count' @click='$router.push("/group/info/"+chatInfo.id)'>
+                <v-icon>mdi-dots-horizontal</v-icon>
+            </v-btn>
         </div>
+        <transition enter-active-class="animated slideInRight" leave-active-class="animated slideOutRight">
+            <div :class="['elevation-5','has-video']" v-if='chatInfo.count&&liveUsers.length>0'>
+                <v-btn class="zoom-btn" icon @click="liveUsers=[]">
+                    <v-icon>mdi-notification-clear-all</v-icon>
+                </v-btn>
+                <div class="item" v-for="user in liveUsersInfo" :key='user.id'>
+                    <div class="avatar">
+                        <img :src="serverHost+user.avatar" />
+                        <div class="name">{{user.name}}</div>
+                    </div>
+                </div>
+                <div class="join">
+                    <v-btn class="btn" depressed @click="call('callVideo')">
+                        <v-icon class="icon">mdi-video-plus</v-icon> 
+                        加入
+                    </v-btn>
+                </div>
+            </div>
+        </transition>
         <div class="chat" @click="openVoice=false" ref='chat'  v-intersect='onShow' @scroll="onScroll()">
             <v-progress-linear v-if='loading'
                 indeterminate
                 :color="theme"
                 ></v-progress-linear>
-            <div class="time" :style="{backgroundColor:theme,color:theme.isBlack?'#fff':'#000'}">17:56</div>
-            <Msg v-for="msg in msgData" :key='msg.id' :data='msg' @openImg='openImgView' :userInfo='userInfo'/>
+                <transition-group enter-active-class="animated rubberBand">
+                    <Msg v-for="(msg,index) in msgData" :key='msg.id' 
+                        :data='msg' @openImg='openImgView' :userInfo='userInfo(msg.from)' 
+                        :showTime='showTime(index)'/>
+                </transition-group>
         </div>
         <div class="input-container" @click="openVoice=false">
             <div class="tool">
@@ -24,9 +52,9 @@
                 <input type="file" ref="inputFile" :style="{display:'none'}" @change="handleSelectFile"/>
                 <v-btn fab icon small @click="$refs.inputImg.click()"><v-icon>mdi-image</v-icon></v-btn>
                 <input multiple="multiple" type="file" accept="image/*" ref="inputImg" :style="{display:'none'}" @change="handleSelectImg"/>
+                <v-btn fab icon small @click.stop='openVoice=!openVoice'><v-icon>mdi-microphone</v-icon></v-btn>
                 <v-btn fab icon small @click="openHistory=true"><v-icon>mdi-history</v-icon></v-btn>
                 <div :style="{float:'right',marginRight:'20px'}">
-                    <v-btn fab icon small @click.stop='openVoice=!openVoice'><v-icon>mdi-microphone</v-icon></v-btn>
                     <v-btn fab icon small @click="call('callVideo')"><v-icon>mdi-message-video</v-icon></v-btn>
                     <v-btn fab icon small @click="call('callPhone')"><v-icon>mdi-phone</v-icon></v-btn>
                 </div>
@@ -45,7 +73,7 @@
             </div>
         </div>
         <transition enter-active-class="animated zoomIn" leave-active-class="animated zoomOut">
-            <History v-if="openHistory" @close='openHistory=false' :userInfo='userInfo'/>
+            <History v-if="openHistory" @close='openHistory=false' :userInfo='chatInfo'/>
         </transition>
         <transition enter-active-class="animated zoomIn" leave-active-class="animated zoomOut">
             <InputVoice v-show='openVoice' @close='openVoice=false' @toBottom='toBottom' @send='send' :id='id'/>
@@ -69,7 +97,7 @@ import compressImg from '../../../util/compressImg'
 import ImgView from '../../../components/imgView'
 export default {
     components:{Msg,History,InputVoice,Emoji,ImgView},
-    props:['id','loading'],
+    props:['id','loading','groupInfo','chatInfo'],
     data(){
         return{
             text:'',//输入文字内容
@@ -85,6 +113,8 @@ export default {
             imgIndex:0,//打开图片的下标
             downShift:false,//按下左shift
             openEmoji:false,//打开emoji--menu
+            msgLength:0,//消息列表长度 用于判断是否是收到新消息
+            liveUsers:[],//正在视频的用户
         }
     },
     computed:{
@@ -115,18 +145,26 @@ export default {
         chatList(){
             return this.$store.state.chatList;
         },
-        userInfo(){
-            let data=this.$store.state.friendList;
-            for(let i in data){
-                if(data[i].userSn===this.id){
-                    return{
-                        avatar:data[i].profilePhoto,
-                        name:data[i].remark?data[i].remark:data[i].nickName,
-                        id:data[i].userSn
+        liveUsersInfo(){
+            let users=[];
+            for(let id of this.liveUsers){
+                for(let user of this.groupInfo.chatGroupUserList){
+                    if(user.sn===id){
+                        users.push({
+                            avatar:user.profilePhoto,
+                            id:user.sn,
+                            name:user.remark?user.remark:user.nickName,
+                        })
+                        break
                     }
                 }
             }
-            return {avatar:'/public/avatar.png',name:'unknow'}
+            return users
+        }
+    },
+    mounted(){
+        if(this.chatInfo.group){
+            this.getLiveUsers();
         }
     },
     methods:{
@@ -141,13 +179,19 @@ export default {
             this.imgIndex=index;
         },
         async call(type){
+            let group=false;
+            if(this.chatInfo.group){
+                group=true;
+                this.liveUsers=[]
+            }
             if(this.$store.state.call.open){
                 return;
             }
             let data={
                 type,
                 open:true,
-                userSn:this.id
+                userSn:this.id,
+                group,
             }
             this.$store.commit('openCall',data);
         },
@@ -160,22 +204,23 @@ export default {
             console.log(data)
         },
         handleSend(){
-            let msgid=this.msgData.length+1;
+            let msgid=new Date().getTime();//临时id
+            let text=this.text.trim();
             if(this.imgs.length>0)
             {
                 this.sendImg(msgid);
             }else{
-                if(this.text.trim().length===0) return;
+                if(text.trim().length===0) return; 
+                this.text='';
                 let data={
                     id:msgid,
                     from:this.$store.state.myInfo.id,
-                    content:this.text.trim(),
+                    content:text.trim(),
                     type:'text',
                     to:this.id,
                     status:'success',
                     time:new Date().getTime()
                 }
-                this.text='';
                 this.$store.commit('newMsg',data);//单条
                 this.send(data.content,'text',msgid);
             }
@@ -198,14 +243,8 @@ export default {
                 }
             }
             if(!exist){
-                this.axios({
-                    method:'get',
-                    url:this.apiHost+'/chat/getChatList?page=0&size=20'
-                }).then(res=>{
-                    if(res.data.code==='10000'){
-                        let data=JSON.parse(res.data.data).content;
-                        this.$store.commit('setChatList',data);
-                    }
+                this.$nextTick(()=>{
+                    this.$store.commit('setUpdateChatList',true)
                 })
             }
             // this.axios({
@@ -265,6 +304,40 @@ export default {
                         this.$store.commit('updateMsgStatus',{status:'error',id:datas[i].id})
                 })
             }
+        },
+        userInfo(id){
+            if(id===this.myInfo.id) return;
+            let data=this.chatList;
+            for(let i in data){
+                if(data[i].contactSn===this.id){
+                    if(data[i].chatType==='group'){
+                        let userInfo=null;
+                        if(this.groupInfo&&this.groupInfo.chatGroupUserList){
+                            for(let user of this.groupInfo.chatGroupUserList){//从群信息的用户列表查询出发送消息者的用户信息
+                                if(user.sn===id) userInfo=user;
+                            }
+                            return{
+                                avatar:userInfo.profilePhoto,
+                                id:userInfo.sn,
+                                name:userInfo.remark?userInfo.remark:userInfo.nickName,
+                                type:'group'
+                            }
+                        }
+                        return{
+                                avatar:'/public/avatar.png',
+                                name:'unknow',
+                                id:-1
+                        }
+                    }else{
+                        return {
+                                    avatar:data[i].profilePhoto,
+                                    id:data[i].contactSn,
+                                }
+                    }
+                    
+                }
+            }
+            return {avatar:'/public/avatar.png',name:'unknow'}
         },
         toBottom(){
             this.$refs.chat.scrollTop=this.$refs.chat.scrollHeight;
@@ -340,14 +413,43 @@ export default {
             if(this.$refs.chat.scrollTop===0){
                 this.$emit('loadMore')
             }
+        },
+        showTime(index){//是否显示消息时间
+            if(index>0){
+                let preTime=new Date(this.msgData[index-1].time).getTime();
+                let time=new Date(this.msgData[index].time).getTime();
+                let diff=(time-preTime)/(1000*60);//相差分数
+                if(diff>=10){
+                    return true;
+                }
+                return false;
+            }
+        },
+        getLiveUsers(){
+            this.axios({
+                method:'get',
+                url:this.serverHost+'/openvidu/get-users?sessionName='+this.chatInfo.id
+            }).then(res=>{
+                this.liveUsers=res.data
+            })
         }
     },
     watch:{
-        // msgData(){
-        //     this.$nextTick(()=>{
-        //         this.toBottom();
-        //     })
-        // },
+        msgData(newVal){
+            if(newVal.length-this.msgLength===1){
+                this.$nextTick(()=>{
+                    this.toBottom();
+                })
+            }
+            else{
+                if(newVal.length<=20){//若消息列表长度小于20，说明是第一页
+                    this.$nextTick(()=>{
+                        this.toBottom();
+                    })
+                }
+            }
+            this.msgLength=newVal.length
+        }
     }
 }
 </script>
@@ -361,29 +463,89 @@ export default {
         flex-direction: column;
         animation-duration: .5s;
         .topbar{
-            padding:20px;
+            padding:0 20px;
             margin-top:10px;
             position: relative;
+            overflow: hidden;
             .name{
                 font-weight: bold;
                 font-size: 1.2rem;
+                float:left;
+            }
+        }
+        .has-video{
+            position: absolute;
+            z-index: 10;
+            height: 200px;
+            width: 400px;
+            top:45px;
+            left:50%;
+            transform: translateX(-50%);
+            margin:0 auto;
+            background-color: #fff;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            overflow: hidden;
+            animation-duration: .5s;
+            .zoom-btn{
                 position: absolute;
-                top: 50%;
-                transform: translateY(-50%);
+                top:0;
+                right: 0;
+                background-color: #fff;
+            }
+            .item{
+                margin: 5px;
+                .avatar{
+                    width: 80px;
+                    height:80px;
+                    border-radius: 50%;
+                    overflow: hidden;
+                    position: relative;
+                    img{
+                        width:100%;
+                    }
+                    .name{
+                        position: absolute;
+                        z-index: 2;
+                        width: 100%;
+                        height: 100%;
+                        background-color: rgba(0,0,0,0.5);
+                        text-align: center;
+                        line-height: 80px;
+                        top:0;
+                        left:0;
+                        color:#fff;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
+                }
+            }
+            .join{
+                position: absolute;
+                left:0;
+                bottom: 0;
+                width: 100%;
+                .btn{
+                    background-color: #536DFE;
+                    width: 100%;
+                    color:#fff;
+                    font-weight: bold;
+                    .icon{
+                        margin-right: 5px;
+                        color:#fff
+                    }
+                }
             }
         }
         .chat{
             flex: 1;
             position: relative;
             overflow: auto;
-            .time{
-                padding:1px 10px;
-                border-radius: 20px;
-                width:fit-content;
-                font-size: 0.5rem;
-                margin:0 auto;
-                margin-bottom: 10px;
-            }
+            overflow-x: hidden;
         }
         .input-container{
             .tool{

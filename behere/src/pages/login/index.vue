@@ -2,7 +2,7 @@
 <!-- <v-container> -->
     <v-row id="login">
         <v-col md='7' class="left d-none d-sm-flex" >
-            <v-col :cols='6' class="side">
+            <v-col :cols='6' class="side" :style="{backgroundColor:theme}">
                     <div class="logo-container">
                         <img src='../../assets/img/logo.png' class="logo" />
                         <img src='../../assets/img/slogan.png' class="slogan" />
@@ -15,7 +15,7 @@
                         <div class="title">登录您的Be Here账号</div>
                         <div class="icon-container">
                             <img src="../../assets/icon/qq.png" alt="qq" class="icon"/>
-                            <img src="../../assets/icon/weixin.png" alt="weixin" class="icon wx" @click="openWxQR=false"/>
+                            <img src="../../assets/icon/weixin.png" alt="weixin" class="icon" @click="openWxQR=false"/>
                             <img src="../../assets/icon/weibo.png" alt="weibo" class="icon"/>
                         </div>
                         <v-divider class="divider">Or</v-divider>
@@ -23,10 +23,11 @@
                         <div class="btn-container">
                             <v-row>
                                 <v-col cols='6'>
-                                    <v-btn class="btn btn-register" @click="openRegister=true" depressed>注册</v-btn>
+                                    <v-btn class="btn btn-register" @click="openRegister=true" depressed >注册</v-btn>
                                 </v-col>
                                 <v-col cols='6'>
-                                    <v-btn class="btn btn-login" depressed @click="login()">登录</v-btn>
+                                    <v-btn class="btn btn-login" depressed @click="login()" 
+                                        :style="{backgroundColor:theme,color:'#fff'}">登录</v-btn>
                                 </v-col>
                             </v-row>
                         </div>

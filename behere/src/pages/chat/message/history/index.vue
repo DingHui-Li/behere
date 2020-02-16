@@ -15,15 +15,20 @@
         </div>
         <div class="result">
             <div class="tabitem" v-if='tabSelect===0'>
+                <v-progress-linear indeterminate :color='theme' v-if='searchLoading'></v-progress-linear>
                 <div class="searchNum">{{result.length}}条搜索结果</div>
                 <HistoryItem v-for="data in result" :key='data.sn' 
                     :data='data' :userInfo='userInfo' :keyword='keyword' :theme='theme' :serverHost='serverHost' :myInfo='myInfo'/>
             </div>
             <div class="tabitem" v-if='tabSelect===1'>
+                <v-progress-linear indeterminate :color='theme' v-if='imgLoading'></v-progress-linear>
+                <div v-if='imgResult.length===0&&!imgLoading' class="tip">无图片</div>
                 <v-img class="img" v-for="(img,index) in imgResult" :key='img.sn' v-ripple
                 :src='serverHost+img.content' @click="imgView={open:true,index}"></v-img>
             </div>
             <div class="tabitem" v-if='tabSelect===2'>
+                <v-progress-linear indeterminate :color='theme' v-if='fileLoading'></v-progress-linear>
+                <div v-if='fileResult.length===0&&!fileLoading' class="tip">无文件</div>
                 <FileResult v-for="file in fileResult" :key='file.sn' :data='file' :userInfo='userInfo' :serverHost='serverHost' :myInfo='myInfo'/>
             </div>
         </div>
@@ -48,7 +53,10 @@ export default {
                 open:false,
                 index:0
             },
-            fileResult:[]
+            fileResult:[],
+            searchLoading:false,
+            imgLoading:false,
+            fileLoading:false
         }
     },
     computed:{
@@ -68,21 +76,45 @@ export default {
     methods:{
         search(value){
             this.tabSelect=0;
+            if(value.trim().length===0) return;
+            this.searchLoading=true;
+            let url=`/message/getHistoryByContent?content=${value.trim()}&contactSn=${this.userInfo.id}`
+            if(this.userInfo.count){
+                url=`/message/getGroupHistoryByContent?content=${value.trim()}&groupSn=${this.userInfo.id}`
+            }
             this.axios({
                 method:'get',
-                url:this.apiHost+`/message/getHistoryByContent?content=${value}&contactSn=${this.userInfo.id}`
+                url:this.apiHost+url
             }).then(res=>{
-                this.result=res.data.data.content;
-                //console.log(JSON.parse(res.data.data))
+                if(res.data.code==='10000'){
+                    if(this.userInfo.count){
+                        this.result=JSON.parse(res.data.data).content;
+                    }else{
+                        this.result=JSON.parse(res.data.data.content)
+                    }
+                }
+            }).finally(()=>{
+                this.searchLoading=false;
             })
         },
         searchByType(type){
+            if(type==='img') this.imgLoading=true;
+            else this.fileLoading=true;
+            let url=`/message/getHistoryByType?contactSn=${this.userInfo.id}&type=${type}`
+            if(this.userInfo.content){
+                url=`/message/getGroupHistoryByType?groupSn=${this.userInfo.id}&type=${type}`
+            }
             this.axios({
                 method:'get',
-                url:this.apiHost+`/message/getHistoryByType?contactSn=${this.userInfo.id}&type=${type}`
+                url:this.apiHost+url
             }).then(res=>{
-                if(type==='img') this.imgResult=res.data.data.content;
-                if(type==='file') this.fileResult=res.data.data.content;
+                if(res.data.code==='10000'){
+                    if(type==='img') this.imgResult=JSON.parse(res.data.data.content);
+                    if(type==='file') this.fileResult=JSON.parse(res.data.data.content);
+                }
+            }).finally(()=>{
+                this.imgLoading=false;
+                this.fileLoading=false;
             })
         }
     }
@@ -134,6 +166,11 @@ export default {
                 padding:20px;
                 padding-top: 0;
                 overflow: auto;
+                .tip{
+                    text-align: center;
+                    color:#959595;
+                    font-weight: normal;
+                }
                 .searchNum{
                     text-align: center;
                     font-size: 0.9rem;

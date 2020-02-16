@@ -1,4 +1,4 @@
-Date.prototype.parse=function(){
+Date.prototype.parse=function(detail){
     let now=new Date();
     let Y=now.getFullYear();
     let M=now.getMonth()+1;
@@ -9,16 +9,18 @@ Date.prototype.parse=function(){
     let d=this.getDate();
     let h=this.getHours();
     let min=this.getUTCMinutes();
+    min=min<10?'0'+min:min
 
+    if(detail==='time') return h+':'+min
     if(Y===y&&M===m&&D===d){
         return h+':'+min;
     }else if(Y===y&&M===m){
-        if(D-d===1) return '昨天'
-        else return m+'月'+d+'日'
+        if(D-d===1) return `昨天 ${detail?(h+':'+min):''}`;
+        else return `${m}月${d}日 ${detail?(h+':'+min):''}`;
     }else if(Y===y){
-        return m+'月'+d+'日'
+        return `${m}月${d}日 ${detail?(h+':'+min):''}`;
     }else{
-        return y+'年'+m+'月'+d+'日'
+        return `${y}年${m}月${d}日 ${detail?(h+':'+min):''}`;
     }
 }
 

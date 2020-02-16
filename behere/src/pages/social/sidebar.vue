@@ -1,13 +1,13 @@
 <template>
     <div id='sidebar'>
         <div class="background"></div>
-        <div class="item" v-ripple :class="{'item-selected':selected===0}" @click="selected=0">朋友们</div>
-        <div class="item" v-ripple :class="{'item-selected':selected===1}" @click="selected=1">随便看看</div>
-        <div class="item" v-ripple :class="{'item-selected':selected===2}" @click="selected=2">提到我的</div>
-        <div class="divider"></div>
-        <div class="item last-item" v-ripple :class="{'item-selected':selected===3}" @click="selected=3">
-            朋友们
+        <div class="item" v-ripple :class="{'item-selected':selected==='home'}" @click="$router.replace('/social')">朋友们</div>
+        <div class="item" v-ripple :class="{'item-selected':selected==='look'}"  @click="$router.replace('/social/look')">随便看看</div>
+        <div class="item" v-ripple :class="{'item-selected':selected==='notify'}" @click="$router.replace('/social/notify')">
+            通知
+            <div class="badge" v-if='socialNum>0'>{{socialNum>99?99:socialNum}}</div>
         </div>
+        <div class="divider"></div>
     </div>
 </template>
 
@@ -15,12 +15,20 @@
 export default {
     data(){
         return{
-            selected:0
+            selected:this.$route.name
         }
     },
     computed:{
         theme(){
             return this.$store.state.theme;
+        },
+        socialNum(){
+            return this.$store.state.socialNum
+        }
+    },
+    watch:{
+        '$route'(route){
+            this.selected=route.name
         }
     }
 }
@@ -48,8 +56,19 @@ export default {
             padding:10px 20px;
             font-weight: bold;
             color:#fff;
+            overflow: hidden;
             &:hover{
                 cursor: pointer;
+            }
+            .badge{
+                width:25px;
+                height:25px;
+                background-color: red;
+                border-radius: 50%;
+                text-align: center;
+                float:right;
+                line-height: 25px;
+                font-size: 0.8rem;
             }
         }
         .item-selected{

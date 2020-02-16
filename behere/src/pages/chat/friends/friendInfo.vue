@@ -44,7 +44,7 @@
                     </div>
                     <div class="desc">
                         <v-textarea solo flat auto-grow :counter="100" :rows="3" :readonly="!alterDesc" v-if='isme' hide-details
-                            :style="{border:alterDesc?`1px solid ${theme}`:'1px solid #e0e0e0'}"
+                            :style="{border:alterDesc?`1px solid ${theme}`:'1px solid #e0e0e0',marginLeft:'20px'}"
                             v-model="inputDesc" />
                         <div :style="{maxWidth:'200px',float:'right'}" v-else>{{userInfo.description}}</div>
                         <transition enter-active-class="animated fadeIn" leave-active-class="animated fadeOut" mode="out-in" v-if='isme'>
@@ -137,45 +137,12 @@
                 <v-btn fab icon large :style="{backgroundColor:'#388E3C'}" @click="communicate('msg')"><v-icon class="icon">mdi-message-processing</v-icon></v-btn>
             </div>
             <div class="del-add">
-                <v-btn :style="{backgroundColor:'#F44336'}" class="btn" v-if='!isme&&isFriend'>删 除</v-btn >
                 <v-btn  :style="{backgroundColor:'#4CAF50'}" class="btn" v-if='!isme&&!isFriend' @click="applyFriend=true">添 加</v-btn >
             </div>
             <!-- 头像剪裁区 -->
         </div>
         <v-dialog v-model="cropper" width="800">
-            <div class="cropper elevation-1">
-                <div :style="{width:'500px',height:'500px'}">
-                    <VueCropper  ref='cropper' :img='avatarOrigin' @realTime='preview'
-                    :fixed='true' :maxImgSize='1000' :info='false'
-                    :outputSize='0.5' :fixedBox='true' :autoCrop='true' :canMoveBox='false' :centerBox='true'/>
-                </div>
-                <div class="right">
-                    <div class="preview" :style="{flex:1}">
-                        <div v-if='avatarPreview' class="preview-item"
-                        :style="{width:avatarPreview.w+'px',height:avatarPreview.h+'px',zoom:40/avatarPreview.w}" >
-                            <div :style="avatarPreview.div" class="img">
-                                <img :src="avatarPreview.url" :style="avatarPreview.img">
-                            </div>
-                        </div>
-                        <div v-if='avatarPreview' class="preview-item"
-                        :style="{width:avatarPreview.w+'px',height:avatarPreview.h+'px',zoom:60/avatarPreview.w}" >
-                            <div :style="avatarPreview.div" class="img">
-                                <img :src="avatarPreview.url" :style="avatarPreview.img">
-                            </div>
-                        </div>
-                        <div v-if='avatarPreview' class="preview-item"
-                        :style="{width:avatarPreview.w+'px',height:avatarPreview.h+'px',zoom:90/avatarPreview.w}" >
-                            <div :style="avatarPreview.div" class="img">
-                                <img :src="avatarPreview.url" :style="avatarPreview.img">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="actions">
-                        <v-btn depressed class="btn" @click="cropper=false">取消</v-btn>
-                        <v-btn depressed class="btn" @click="handleAlterAvatar">确定</v-btn>
-                    </div>
-                </div>
-            </div>
+            <Cropper :img='avatarOrigin' @submit='handleAlterAvatar'/>
         </v-dialog>
         <v-dialog v-model="alterLocation" width="800">
             <Location @success='(v)=>{
@@ -192,11 +159,11 @@
 </template>
 
 <script>
-import {VueCropper } from 'vue-cropper'
+import Cropper from '../components/cropper'
 import ApplyFriend from '../components/applyFriend'
 import Location from './location'
 export default {
-    components:{VueCropper,ApplyFriend,Location},
+    components:{Cropper,ApplyFriend,Location},
     data(){
         return{
             alterRemark:false,
@@ -206,7 +173,6 @@ export default {
             alterLocation:false,//修改位置--弹窗状态
             cropper:false,//剪裁头像
             avatarOrigin:'',//头像原始文件
-            avatarPreview:null,
             userInfo:null,//用户资料
             snackbar:{
                 open:false,
@@ -260,7 +226,7 @@ export default {
             return s.substr(month*2-(day<arr[month-1]?2:0),2);
         },
         id(){
-            return this.$store.state.openFriend||this.$store.state.myInfo.id;
+            return this.$store.state.openFriend;
         },
         friendGroup(){
             return this.$store.state.friendGroup;
@@ -281,10 +247,14 @@ export default {
             return ''
         },
         location(){
-            if(this.userInfo.location){
+            try{
                 return JSON.parse(this.userInfo.location)
+            }catch{
+                return ''
             }
-            return '';
+        },
+        updateFriendList(){
+            return this.$store.state.updateFriendList
         }
     },
     mounted(){
@@ -316,10 +286,8 @@ export default {
             this.cropper=true;
             e.target.value=''
         },
-        preview(data){
-            this.avatarPreview=data;
-        },
         getUserInfo(){
+            if(!this.id) return
             this.loading=true;
             this.axios({
                 method:'get',
@@ -333,6 +301,7 @@ export default {
                         }
                     }
                     if(!data.description) data.description='一条咸鱼'
+                    if(!data.location) data.location=''
                     this.inputDesc=data.description;//初始化输入框的值
                     this.inputName=data.nickName;
                     this.inputRemark=data.remark;
@@ -381,22 +350,20 @@ export default {
                 this.userInfo.remark=backup;
             })
         },
-        handleAlterAvatar(){//修改头像
+        handleAlterAvatar(data){//修改头像
             this.cropper=false;
             try{
-                this.$refs.cropper.getCropBlob((data) => {
-                    let fd=new FormData();
-                    fd.append('file',data,'avatar.jpg')
-                    this.axios({
-                        method:'post',
-                        url:this.serverHost+'/uploadAvatar',
-                        data:fd
-                    }).then(res=>{
-                        if(res.data.code===200){
-                            let path=res.data.path;
-                            this.alterInfo('profilePhoto',path,'修改头像成功')
-                        }
-                    })
+                let fd=new FormData();
+                fd.append('file',data,'avatar.jpg')
+                this.axios({
+                    method:'post',
+                    url:this.serverHost+'/uploadAvatar',
+                    data:fd
+                }).then(res=>{
+                    if(res.data.code===200){
+                        let path=res.data.path;
+                        this.alterInfo('profilePhoto',path,'修改头像成功')
+                    }
                 })
             }catch(err){
                 console.log(err);
@@ -441,6 +408,16 @@ export default {
                 this.getUserInfo();
             }
         },
+        updateFriendList(newVal){//好友列表更新 =》资料页更新
+            if(newVal){
+                this.getUserInfo()
+            }
+        },
+        '$route'(route){
+            if(route.name==='friendInfo'){
+                this.getUserInfo();
+            }
+        }
     }
 }
 </script>

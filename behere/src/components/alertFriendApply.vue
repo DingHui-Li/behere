@@ -1,13 +1,13 @@
 <template>
     <div id='alert-friend-apply' class="elevation-5" 
         :style="{backgroundColor:theme,color:theme.isBlack()?'#000':'#fff',top:index*150+40+'px'}" 
-        v-ripple @click="$router.replace('/friends/new')">
+        v-ripple @click="handleAction">
         <div :style="{display:'flex',padding:'10px'}" >
             <div class="avatar" @click.stop="toInfo">
                 <v-img :src='serverHost+data.profilePhoto'></v-img>
             </div>
             <div class="content">
-                <div class="top">{{data.nickName}}请求添加您为好友
+                <div class="top">{{data.nickName}} <span v-if='data.type==="sys_personal_add"'>请求添加您为好友</span>
                     <v-btn icon :style="{float:'right'}" @click="$store.commit('removeAlterFriendApply',index)"><v-icon>mdi-notification-clear-all</v-icon></v-btn>
                 </div>
                 <div class="text">{{data.content}}</div>
@@ -51,12 +51,12 @@ export default {
             this.$router.replace('/friends/info')
             this.$store.commit('removeAlterFriendApply',this.index)
         },
-        action(act){
-            this.axios({
-                method:'get',
-                url:this.apiHost+`/contact/admitContact?contactSn=${this.data.from}&messageSn=${this.data.sn}&status=${act}`
-            })
-            this.$store.commit('removeAlterFriendApply',this.index)
+        handleAction(){
+            if(this.data.type==='sys_personal_add'){
+                this.$router.push('/friends/new')
+            }else{
+                this.$router.push('/group/new')
+            }
         }
     }
 }

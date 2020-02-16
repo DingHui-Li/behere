@@ -7,7 +7,7 @@
             <div class="name">{{apply.nickName}}</div>
             <div class="text">{{apply.content}}</div>
         </div>
-        <div class="actions" v-if='apply.status==="0"'>
+        <div class="actions" v-if='apply.status==="0"||apply.status==="1"'>
             <v-menu>
                 <template v-slot:activator='{on}'>
                     <v-btn icon large v-on='on' :style="{backgroundColor:'#4CAF50'}" class="btn"><v-icon>mdi-check</v-icon></v-btn>
@@ -15,16 +15,16 @@
                 <div class="select-group">
                     <div class="tip">选择添加到分组</div>
                     <div class="group-item" v-for="group in friendGroup" :key='group.sn' 
-                        v-ripple @click="action(apply.from,apply.sn,1,group.sn)">
+                        v-ripple @click="action(apply.from,apply.sn,2,group.sn)">
                         {{group.groupName}}
                     </div>
                 </div>
             </v-menu>
-            <v-btn icon large :style="{backgroundColor:'#FF5252'}" class="btn" @click="action(apply.from,apply.sn,2)"><v-icon>mdi-cancel</v-icon></v-btn>
+            <v-btn icon large :style="{backgroundColor:'#FF5252'}" class="btn" @click="action(apply.from,apply.sn,3)"><v-icon>mdi-cancel</v-icon></v-btn>
         </div>
         <div class="status" v-else>
-            <v-btn icon large :style="{backgroundColor:'#4CAF50'}" class="btn" disabled v-if='apply.status==="1"'><v-icon>mdi-check</v-icon></v-btn>
-            <v-btn icon large :style="{backgroundColor:'#FF5252'}" class="btn" disabled v-else-if='apply.status==="2"'><v-icon>mdi-cancel</v-icon></v-btn>
+            <v-btn icon large :style="{backgroundColor:'#4CAF50'}" class="btn" disabled v-if='apply.status==="2"'><v-icon>mdi-check</v-icon></v-btn>
+            <v-btn icon large :style="{backgroundColor:'#FF5252'}" class="btn" disabled v-else-if='apply.status==="3"'><v-icon>mdi-cancel</v-icon></v-btn>
             <v-btn depressed disabled class="btn" v-else>已过期</v-btn>
         </div>
         <v-snackbar v-model="snackbar.open" :color='snackbar.color' top>
@@ -67,18 +67,18 @@ export default {
         action(from,id,status,groupSn){
             let oldStatus=this.apply.status;
             this.apply.status=status+'';
+            this.$store.commit('reduceFriendApplyNum');
             this.axios({
                 method:'get',
                 url:this.apiHost+`/contact/admitContact?contactSn=${from}&messageSn=${id}&status=${status}&groupSn=${groupSn}`
             }).then(res=>{
-                console.log(res)
                 if(res.data.code==='10000'){
                     let text='';
-                    if(status===1){
+                    if(status===2){
                         text='已同意好友申请'
                         this.$store.commit('setUpdateFriendList',true);
                     }
-                    if(status===2) text='已拒绝好友申请'
+                    if(status===3) text='已拒绝好友申请'
                     this.snackbar={open:true,text,color:'success'}
                 }else{this.apply.status=oldStatus}
             }).catch(()=>{

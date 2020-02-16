@@ -38,12 +38,12 @@ export default {
             return this.$store.state.serverHost;
         },
         src(){
-            if(this.data.src.includes('blob')) return this.data.src;
+            if(this.data.src&&this.data.src.includes('blob')) return this.data.src;
+            else if(this.data.path){
+                return this.serverHost+this.data.path
+            }
             else return this.serverHost+this.data.src
-            // this.axios({
-            //     url:this.serverHost+data.src,
-            //     responseType:'blob'
-            // })
+            
         }
     },
     data(){

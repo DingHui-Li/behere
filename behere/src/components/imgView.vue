@@ -6,7 +6,9 @@
             <swiper-slide v-for="(img,index) in imgs" :key="'swiperimg'+index" class="swiper-item">
                 <swiper :options='swiper2Option' class="swiper">
                     <swiper-slide class="swiper-item">
-                        <img :src="imgPath(img)" alt="" class="img"/>
+                        <div class="swiper-zoom-container">
+                            <img :src="imgPath(img)" alt="" class="img"/>
+                        </div>
                     </swiper-slide>
                 </swiper>
             </swiper-slide>
@@ -22,6 +24,7 @@ export default {
     data(){
         return{
             swiperOption:{
+                zoom : true,
                 pagination: {
                     el: '.swiper-pagination',
                 },
@@ -67,7 +70,7 @@ export default {
         position: fixed;
         left:0;
         top:0;
-        z-index: 9999;
+        z-index: 999999999;
         padding:0;
         margin:0;
         background-color: rgba(0,0,0,.7);
@@ -88,14 +91,14 @@ export default {
         position: relative;
         height: 100%;
         width:100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     .img{
         position: relative;
         max-width:100%;
         max-height:100%;
-        top:50%;
-        left:50%;
-        transform: translate(-50%,-50%);
     }
 
     .fade-enter-active, .fade-leave-active {

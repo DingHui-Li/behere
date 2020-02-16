@@ -69,19 +69,18 @@ export default {
         remove(){
             this.deleteFriend=false;
             let temp=this.data;
-            this.$store.commit('removeFriend',this.data.userSn)
             this.axios({
                 method:'get',
                 url:this.apiHost+'/contact/delContactByContactSn?contactSn='+this.data.userSn
             }).then(res=>{
                 if(res.data.code==='10000'){
                     this.snackbar={open:true,text:'删除好友成功',color:'success'}
+                    this.$store.commit('removeFriend',this.data.userSn)
                 }else{
                     this.snackbar={open:true,text:'删除好友失败，code：'+res.data.code,color:'error'}
                 }
             }).catch(()=>{
                 this.snackbar={open:true,text:'删除好友失败',color:'error'}
-                this.$store.commit('addFriend',temp)
             })
         }
     },

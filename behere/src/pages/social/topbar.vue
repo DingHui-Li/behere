@@ -2,29 +2,24 @@
     <v-container fluid id='topbar'>
         <v-row justify='center' align="center" class='content-container'>
             <v-col md='10' lg='9' xl='8' class="content">
-                <v-row>
-                    <v-col sm='2' class="d-none d-sm-flex logo-container">
-                        <img :src='logo' class="logo" />
-                    </v-col>
-                    <v-col xs='12' sm='5' md='4' lg='4' class="user-container" ref='userContainer'>
-                        <v-menu offset-y :closeOnContentClick='false' :closeOnClick='!friendListStatus.lock' v-model="friendListStatus.open" transition="scroll-y-transition">
-                            <template v-slot:activator="{ on }">
-                                <div class="user" v-on="on">
-                                    <v-icon class="lock" v-if='friendListStatus.open&&friendListStatus.lock' @click.stop='handleLock(false)'>mdi-lock</v-icon>
-                                    <v-icon class="lock" v-if='friendListStatus.open&&!friendListStatus.lock' @click.stop='handleLock(true)'>mdi-lock-open-variant</v-icon>
-                                    <div class="avatar" v-ripple></div>
-                                    <div class="infos d-none d-sm-flex">
-                                        <div class="name text-truncate">任我行</div>
-                                        <div class="sign text-truncate">任我行</div>
-                                    </div>
+                    <img :src='logo' class="logo" />
+                    <v-menu offset-y :closeOnContentClick='true' transition="scroll-y-transition">
+                        <template v-slot:activator="{ on }">
+                            <div class="user" v-on="on" v-ripple>
+                                <div class="avatar">
+                                    <img :src="serverHost+myInfo.avatar" :style="{width:'100%'}" />
                                 </div>
-                            </template>
-                            <div class="friend-list" :style="{width:friendListWidth}">
-                                <FriendList />
+                                <div class="right">
+                                    <div class="name text-truncate">{{myInfo.name}}</div>
+                                    <v-icon class="icon">mdi-chevron-down</v-icon>
+                                </div>
                             </div>
-                        </v-menu>
-                    </v-col>
-                </v-row>
+                        </template>
+                        <v-list>
+                            <v-list-item v-ripple @click="$router.replace('/social/user/'+myInfo.id)">个人主页</v-list-item>
+                            <v-list-item v-ripple @click="logout">登出</v-list-item>
+                        </v-list>
+                    </v-menu>
             </v-col>
         </v-row>
     </v-container>
@@ -32,29 +27,33 @@
 
 <script>
 import logo from '../../assets/img/logo.png'
-import FriendList from './friendlist'
+// import FriendList from './friendlist'
 export default {
-    components:{FriendList},
+    // components:{FriendList},
     data:function(){
         return{
             logo,
-            friendListWidth:'200px',//好友列表宽度（与顶栏部分一致）
-            friendListStatus:{//好友列表状态
-                open:false,
-                lock:false
-            },
-            color:''
         }
     },
-    mounted(){
-        this.friendListWidth=this.$refs.userContainer.clientWidth+'px'
+    computed:{
+        myInfo(){
+            return this.$store.state.myInfo
+        },
+        serverHost(){
+            return this.$store.state.serverHost
+        },
+        apiHost(){
+            return this.$store.state.apiHost
+        }
     },
     methods:{
-        handleLock(status){
-            this.friendListStatus.lock=status;
+        logout(){
+            this.$router.replace('/login')
+            this.axios({
+                method:'get',
+                url:this.apiHost+'/user/logout'
+            })
         },
-    },
-    watch:{
     }
 }
 </script>
@@ -81,73 +80,46 @@ export default {
         .content-container{
             height:100%;
             box-shadow: 0 2px 3px 1px rgba(0,0,0,.2);
+            overflow: hidden;
             .content{
                 height:100%;
                 padding:10px;
-                .col{
-                    padding:0 !important;
-                }
-                .logo-container{
-                    height: 100%;
-                    .logo{
-                        position: relative;
-                        width:100px;
-                        height:25px;
-                        top:50%;
-                        transform: translateY(-50%);
-                        float:left;
-                    }
-                }
-                .user-container{
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                .logo{
                     position: relative;
-                    height:100%;
+                    width:100px;
+                    height:25px;
+                    // top:50%;
+                    // transform: translateY(-50%);
+                    // float:left;
+                }
+                .user{
+                    width: fit-content;
+                    display: flex;
+                    align-items: center;
+                    margin-left: 50px;
+                    cursor: pointer;
+                    border-radius: 5px;
                     overflow: hidden;
-                    .user{
-                        position: relative;
-                        width: 100%;
-                        height:100%;
-                        //padding:0 20px;
-                        &:hover{
-                            cursor: pointer
-                        }
-                        .lock{
-                            position: absolute;
-                            top:0px;
-                            right:25px;
-                            z-index: 10;
-                            font-size: 1.2rem;
-                        }
-                        .avatar{
+                    .avatar{
+                        width:60px;
+                        height:60px;
+                        border-radius: 50%;
+                        overflow: hidden;
+                    }
+                    .right{
+                        overflow: hidden;
+                        .name{
+                            font-weight: bold;
+                            margin-left: 5px;
+                            font-size: 1.1rem;
                             float: left;
-                            margin-left:10px;
-                            width:50px;
-                            height: 50px;
-                            border-radius: 50%;
-                            background-color: green;
-                        }
-                        .infos{
-                            position: relative;
-                            float: left;
-                            height: 100%;
-                            margin-left:10px;
-                            .name{
-                                font-weight: bold;
-                                color:#d49b1d;
-                                padding-top:5px;
-                            }
-                            .sign{
-                                position: absolute;
-                                bottom:0;
-                                font-size: 0.8rem;
-                                color:#959595
-                            }
                         }
                     }
                 }
             }
         }
-    }
-    .friend-list{
-        position: relative;
     }
 </style>

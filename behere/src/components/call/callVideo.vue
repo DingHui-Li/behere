@@ -1,6 +1,6 @@
 <template>
     <div :style="{overflow:'hidden',height:'100%'}">
-        <VueDragResize id='call-video' v-on:resizing='resize' class="elevation-10" :w="500" :h='400' :minw='200' :minh='300' parentLimitation :z='999'>
+        <VueDragResize id='call-video' v-on:resizing='resize' class="elevation-10" :w="500" :h='400' :minw='200' :minh='300' :z='999'>
             <div ref='video' :style="{width:'100%',height:'100%',position:'relative'}"
                 @mouseenter="hideAction=false" @mouseleave="hideAction=true">
                 <!-- <v-img :src='avatar' class="background"></v-img> -->

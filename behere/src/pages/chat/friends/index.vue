@@ -2,7 +2,7 @@
     <div id='friends-container'>
         <div class="friends">
             <Search />
-            <div class="new-friend" v-ripple @click="$router.replace('/friends/new')">
+            <div class="new-friend" v-ripple @click="$router.replace('/friends');$router.replace('/friends/new')">
                 <div class="bg" :style="{backgroundColor:theme}"></div>
                 <v-icon class="icon">mdi-account-plus</v-icon>
                 <span>新的朋友</span>
@@ -18,9 +18,7 @@
         </div>
         <div class="content" ref='content'>
                 <transition enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
-                    <keep-alive>
-                        <router-view></router-view>
-                    </keep-alive>
+                    <router-view :style="{padding:0}"></router-view>
                 </transition>
         </div>
     </div>
@@ -54,14 +52,7 @@ export default {
             return this.$store.state.friendGroup;
         },
         badge(){
-            let num=0;
-            let data=this.$store.state.friendApply;
-            for(let i in data){
-                if(data[i].status==='0'){
-                    num++;
-                }
-            }
-            return num;
+            return this.$store.state.friendApplyNum;
         }
     },
     mounted(){
@@ -106,7 +97,10 @@ export default {
         width:100%;
         height:100%;
         display: flex;
-        animation-duration: .3s;
+        animation-duration: .5s;
+        animation-timing-function: ease-in-out;
+        background-color: #fff;
+        border-radius: 0 20px 20px 0;
         .new-friend{
             padding:10px 23px;
             overflow: hidden;

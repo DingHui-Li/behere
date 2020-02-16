@@ -5,15 +5,20 @@
                 <v-img :src='serverHost+data.profilePhoto' :style="{height:'100%'}"></v-img>
             </div>
             <div class="right">
-                <div class="remark" v-if='data.remark' v-html="data.remark.highLight(keyword,theme)"></div>
-                <div v-else class="name-account">
-                    <div class="name" v-html="data.nickName.highLight(keyword,theme)"></div>
-                    <div class="account" v-html="data.username.highLight(keyword,theme)"></div>
+                <div v-if='data.groupName' >
+                    <span v-html='data.groupName' class="remark"></span>
                 </div>
-                <!-- <v-checkbox v-if='type==="select"' v-model="select" :color='theme' @click="click"></v-checkbox> -->
+                <div v-else>
+                    <div class="remark" v-if='data.remark' v-html="data.remark.highLight(keyword,theme)"></div>
+                    <div v-else class="name-account">
+                        <div class="name" v-html="data.nickName.highLight(keyword,theme)"></div>
+                        <div class="account" v-html="data.username.highLight(keyword,theme)"></div>
+                    </div>
+                </div>
             </div>
         </div>
-        <v-btn v-if='type==="outlander"' icon class="btn" @click="applyFriend=true"><v-icon>mdi-plus</v-icon></v-btn>
+        <v-btn v-if='type==="outlander"&&!isGroup' icon class="btn" @click="applyFriend=true"><v-icon>mdi-plus</v-icon></v-btn>
+        <span v-if='isGroup'>群组</span>
         <ApplyFriend :open='applyFriend' @close='applyFriend=false' :id='this.data.sn' />
     </div>
 </template>
@@ -22,7 +27,7 @@
 import ApplyFriend from '../applyFriend'
 export default {
     components:{ApplyFriend},
-    props:['data','type','keyword'],
+    props:['data','type','keyword','isGroup'],
     computed:{
         serverHost(){
             return this.$store.state.serverHost;
@@ -38,8 +43,12 @@ export default {
     },
     methods:{
         goInfo(){
-            this.$store.commit('updateOpenFriend',this.data.userSn)
-            this.$router.replace('/friends/info')
+            if(this.isGroup){
+                this.$router.replace('/group/info/'+this.data.sn)
+            }else{
+                this.$store.commit('updateOpenFriend',this.data.userSn)
+                this.$router.replace('/friends/info')
+            }
         }
     }
 }
@@ -49,7 +58,7 @@ export default {
     #search-friend-item{
         display: flex;
         align-items: center;
-        padding:0px 0;
+        padding:5px 0;
         .avatar{
             width:40px;
             height:40px;
@@ -65,6 +74,7 @@ export default {
             .remark{
                 font-weight: bold;
                 flex: 1;
+                margin-left: 10px;
             }
             .name-account{
                 flex:1;

@@ -9,9 +9,11 @@
                 </v-col>
             </v-row>
             <div class="tip">一周前</div>
-            <v-col :sm='12' :lg='6' v-for="(apply,index) in oldData" :key='apply.sn'>
-                <NewFriendItem :apply='apply' :index='index' />
-            </v-col>
+            <v-row>
+                <v-col :sm='12' :lg='6' v-for="(apply,index) in oldData" :key='apply.sn'>
+                    <NewFriendItem :apply='apply' :index='index' />
+                </v-col>
+            </v-row>
         </div>
     </div>
 </template>
@@ -21,8 +23,8 @@ import NewFriendItem from './newFriendItem'
 export default {
     components:{NewFriendItem},
     computed:{
-        friendApply(){
-            return this.$store.state.friendApply;
+        apiHost(){
+            return this.$store.state.apiHost;
         }
     },
     data(){
@@ -32,24 +34,43 @@ export default {
         }
     },
     mounted(){
-        this.splitData()
+        this.getData()
     },
     methods:{
-        splitData(){
-            for(let i in this.friendApply){
-                let date=new Date(this.friendApply[i].sendTime);
-                this.friendApply[i].sendTime=date;
-                if(date.isLately()){
-                    this.latelyData.push(this.friendApply[i])
+        getData(){
+            this.latelyData=[]
+            this.oldData=[]
+            this.axios({
+                method:'get',
+                url:this.apiHost+'/message/getContactReqMessage?page=0&size=20'
+            }).then(res=>{
+                if(res.data.code==='10000'){
+                    console.log('获取申请列表成功')
+                    let data=JSON.parse(res.data.data);
+                    this.splitData(data.data)
+                    this.$store.commit('setFriendApplyNum',0)
                 }else{
-                    this.oldData.push(this.friendApply[i]);
+                    //this.snackbar={open:true,text:'获取好友申请列表失败，code:'+res.data.code,color:'error',timeout:10000}
+                }
+            })
+        },
+        splitData(data){
+            for(let i in data){
+                let date=new Date(data[i].sendTime);
+                data[i].sendTime=date;
+                if(date.isLately()){
+                    this.latelyData.push(data[i])
+                }else{
+                    this.oldData.push(data[i]);
                 }
             }
         },
     },
     watch:{
-        friendApply(){
-            this.splitData()
+        '$route'(route){
+            if(route.name==='newFriend'){
+                this.getData();
+            }
         }
     }
 }

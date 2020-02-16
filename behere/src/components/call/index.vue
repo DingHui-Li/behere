@@ -1,11 +1,14 @@
 <template>
-    <div :style="{overflow:'hidden',height:'100vh',animationDuration:'.5s'}">
-        <CallVideo v-if="call.type==='callVideo'"
-            @hangup='hangup' @changeSource='changeSource' @mute='mute'
-            :myStream='myStream' :otherStream='otherStream' :connectStatus='connectStatus' :call='call' :userInfo='userInfo'/>
-        <CallPhone v-else 
-            @hangup='hangup' @changeSource='changeSource' @mute='mute'
-            :otherStream='otherStream' :connectStatus='connectStatus' :call='call' :userInfo='userInfo'/>
+    <div class="video-container">
+        <GroupVideo v-if='call.group' :myInfo='myInfo' :serverHost='serverHost' :data='call'/>
+        <div v-if='!call.group'>
+            <CallVideo v-if="call.type==='callVideo'"
+                @hangup='hangup' @changeSource='changeSource' @mute='mute'
+                :myStream='myStream' :otherStream='otherStream' :connectStatus='connectStatus' :call='call' :userInfo='userInfo'/>
+            <CallPhone v-else 
+                @hangup='hangup' @changeSource='changeSource' @mute='mute'
+                :otherStream='otherStream' :connectStatus='connectStatus' :call='call' :userInfo='userInfo'/>
+        </div>
         <v-snackbar v-model="snackbar.open" :color='snackbar.color' top>
             {{snackbar.text}} <v-btn @click="snackbar.open=false" :style="{backgroundColor:'rgba(0,0,0,0)',color:'#fff'}" icon><v-icon>mdi-close</v-icon></v-btn>
         </v-snackbar>
@@ -15,14 +18,16 @@
 <script>
 import CallVideo from './callVideo'
 import CallPhone from './callPhone'
+import GroupVideo from './groupVideo'
 import adapter from 'webrtc-adapter'; 
 export default {
-    components:{CallVideo,CallPhone},
+    components:{CallVideo,CallPhone,GroupVideo},
     data(){
         return{
             myStream:null,
             //audioTrack:null,
             otherStream:null,
+            streams:[],
             pc:null,//RTC peer connection
             iceServers:{
                 iceServers: [
@@ -45,15 +50,18 @@ export default {
                     echoCancellation:true
                 },
                 video:{
-                    height:800,
+                    height:1000,
                     width:1000
                 }
-            }
+            },
         }
     },
     async mounted(){
+        if(this.call.group){ 
+            return;
+        }
         let result=await this.getStream();
-        if(result){
+        if(result){ 
             if(this.call.receiver){
                 this.receiverInit();
             }else{//反之，为发起方
@@ -95,6 +103,12 @@ export default {
                 }
             }
             return null;
+        },
+        myInfo(){
+            return this.$store.state.myInfo;
+        },
+        serverHost(){
+            return this.$store.state.serverHost;
         }
     },
     beforeDestroy(){
@@ -119,8 +133,17 @@ export default {
                     this.option.video.facingMode='user';
                     let frontStream=await navigator.mediaDevices.getUserMedia(this.option)
                     if(frontStream){
-                        console.log(frontStream)
                         this.myStream=frontStream;
+                        // this.streams.push({user:'my',id:'0',stream:frontStream})
+                        // this.streams.push({user:'user1',id:'1',stream:frontStream})
+                        // this.streams.push({user:'user2',id:'2',stream:frontStream})
+                        // this.streams.push({user:'user3',id:'3',stream:frontStream})
+                        // this.streams.push({user:'user4',id:'4',stream:frontStream})
+                        // this.streams.push({user:'user5',id:'5',stream:frontStream})
+                        // this.streams.push({user:'user6',id:'6',stream:frontStream})
+                        // this.streams.push({user:'user7',id:'7',stream:frontStream})
+                        // this.streams.push({user:'user8',id:'8',stream:frontStream})
+                        // this.streams.push({user:'user9',id:'9',stream:frontStream})
                         return resolve(true);
                     }
                     this.option.video.facingMode='environment';
@@ -343,3 +366,13 @@ export default {
     },
 }
 </script>
+<style lang="scss" scoped>
+    .video-container{
+        overflow:hidden;
+        width:100vw;
+        height:100vh;
+        animation-duration:.5s;
+        padding:30px;
+        box-sizing: border-box;
+    }
+</style>

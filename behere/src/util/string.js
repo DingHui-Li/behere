@@ -24,3 +24,9 @@ String.prototype.highLight=function(keyword,color){
     let text=this.replace(replaceReg,replaceString)
     return text;
 }
+
+String.prototype.getColor=function(){
+    let index=this.indexOf('color=');
+    if(index) return '#'+this.substring(index+6)
+    return false
+}

@@ -12,7 +12,9 @@
     "egg-scripts": "^2.11.0",
     "fluent-ffmpeg": "^2.1.2",
     "install": "^0.13.0",
+    "jsonwebtoken": "^8.5.1",
     "npm": "^6.13.1",
+    "openvidu-node-client": "^2.11.0",
     "request": "^2.88.0"
   },
   "devDependencies": {

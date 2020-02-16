@@ -15,6 +15,7 @@
     "epic-spinners": "^1.1.0",
     "js-md5": "^0.7.3",
     "node-sass": "^4.13.0",
+    "openvidu-browser": "^2.11.0",
     "sass-loader": "^8.0.0",
     "vue": "^2.6.10",
     "vue-audio-visual": "^1.4.1",

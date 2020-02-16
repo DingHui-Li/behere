@@ -1,5 +1,6 @@
 <template>
     <div>
+        <div class="time" :style="{backgroundColor:theme,color:theme.isBlack?'#fff':'#000'}" v-if='showTime'>{{new Date(data.time).parse(true)}}</div>
         <div id="msg-container" v-if='isme'>
             <div class="content-container" :style="{paddingLeft:'45px',justifyContent:'flex-end'}">
                 <!-- <v-menu >
@@ -25,7 +26,7 @@
                 </v-menu> -->
                 <div :style="{overflow:'hidden',width:'fit-content'}" >
                     <div v-if='data.type!=="img"&&data.type!=="emoji"'>
-                        <div class="content" :style="{ float: 'right',marginLeft: 0}" >
+                        <div class="content me" :style="{ float: 'right',marginLeft: 0}" >
                             <Voice v-if='data.type==="voice"' :data='content' :msg='true'/>
                             <div v-else-if='data.type==="callVideo"'>[视频通话]</div>
                             <div v-else-if='data.type==="callPhone"'>[语音通话]</div>
@@ -59,39 +60,42 @@
             <div class="avatar" :style="{backgroundColor:theme}" v-ripple @click="$store.commit('updateOpenFriend',userInfo.id);$router.replace('/friends/info')">
                 <v-img :src='serverHost+userInfo.avatar' :style="{height:'100%'}"></v-img>
             </div>
-            <div class="content-container" :style="{paddingRight:'45px'}">
-                <div v-if='data.type!=="img"&&data.type!=="emoji"'>
-                    <div class="content">
-                        <Voice v-if='data.type==="voice"' :data='content' :msg='true'/>
-                        <div v-else-if='data.type==="callVideo"'>[视频通话]</div>
-                        <div v-else-if='data.type==="callPhone"'>[语音通话]</div>
-                        <div v-else-if='data.type==="file"' class="file" v-ripple @click="downloadFile">
-                            <div class="left">
-                                <div class="name">{{content.name}}</div>
-                                <div class="size">{{content.size}}</div>
+            <div class="right">
+                <div class="name" v-if='userInfo.type==="group"'>{{userInfo.name}}</div>
+                <div class="content-container" :style="{paddingRight:'45px'}">
+                    <div v-if='data.type!=="img"&&data.type!=="emoji"'>
+                        <div class="content other">
+                            <Voice v-if='data.type==="voice"' :data='content' :msg='true'/>
+                            <div v-else-if='data.type==="callVideo"'>[视频通话]</div>
+                            <div v-else-if='data.type==="callPhone"'>[语音通话]</div>
+                            <div v-else-if='data.type==="file"' class="file" v-ripple @click="downloadFile">
+                                <div class="left">
+                                    <div class="name">{{content.name}}</div>
+                                    <div class="size">{{content.size}}</div>
+                                </div>
+                                <div class="right">
+                                    <v-icon :size="50" :color='theme'>mdi-file</v-icon>
+                                </div>
                             </div>
-                            <div class="right">
-                                <v-icon :size="50" :color='theme'>mdi-file</v-icon>
-                            </div>
+                            <pre v-else class="textContent">{{data.content}}</pre>
                         </div>
-                        <pre v-else class="textContent">{{data.content}}</pre>
+                        <div class='arrow-left'></div>
                     </div>
-                    <div class='arrow-left'></div>
-                </div>
-                <div class="img" :style="{backgroundColor:data.type==='emoji'?'transparent':(imgPath.getColor()?imgPath.getColor():theme),float:'left'}" v-if='data.type==="img"||data.type==="emoji"'>
-                    <v-icon v-if='imgErr' class="icon">mdi-folder-image</v-icon>
-                    <v-img v-if='data.type==="img"' :src='imgPath' @error="imgErr=true" class="v-img" @click='$emit("openImg",data.id)' v-ripple>
-                        <template v-slot:placeholder>
-                            <v-row
-                            class="fill-height ma-0"
-                            align="center"
-                            justify="center"
-                            >
-                            <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
-                            </v-row>
-                        </template>
-                    </v-img>
-                    <img v-if='data.type==="emoji"' :src='imgPath' class="emoji" />
+                    <div class="img" :style="{backgroundColor:data.type==='emoji'?'transparent':(imgPath.getColor()?imgPath.getColor():theme),float:'left'}" v-if='data.type==="img"||data.type==="emoji"'>
+                        <v-icon v-if='imgErr' class="icon">mdi-folder-image</v-icon>
+                        <v-img v-if='data.type==="img"' :src='imgPath' @error="imgErr=true" class="v-img" @click='$emit("openImg",data.id)' v-ripple>
+                            <template v-slot:placeholder>
+                                <v-row
+                                class="fill-height ma-0"
+                                align="center"
+                                justify="center"
+                                >
+                                <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
+                                </v-row>
+                            </template>
+                        </v-img>
+                        <img v-if='data.type==="emoji"' :src='imgPath' class="emoji" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -102,7 +106,7 @@
 import Voice from '../../../components/voice'
 export default {
     components:{Voice},
-    props:['data','userInfo'],
+    props:['data','userInfo','showTime'],
     data(){
         return{
             avatarErr:false,
@@ -168,6 +172,16 @@ export default {
 </script>
 
 <style lang='scss' scoped>
+    $me-color:#1976D2;
+    $other-color:#4CAF50;
+    .time{
+            padding:1px 10px;
+            border-radius: 20px;
+            width:fit-content;
+            font-size: 0.5rem;
+            margin:0 auto;
+            margin-bottom: 10px;
+        }
     #msg-container{
         width: 100%;
         padding:0 20px;
@@ -209,14 +223,24 @@ export default {
                 z-index:99;
             }
         }
+        .name{
+            margin-left: 10px;
+            font-size: 0.8rem
+        }
         .content-container{
             flex:1;
             position: relative;
             display: flex;
             align-items:center;
+            .me{
+                background-color: $me-color;
+            }
+            .other{
+                background-color: $other-color;
+            }
             .content{
                 margin:5px 15px;
-                background-color: #1976D2;
+                //background-color: #1976D2;
                 border-radius: 20px;
                 padding: 5px 15px;
                 color:#fff;
@@ -247,7 +271,7 @@ export default {
                 z-index: 9;
                 width:20px;
                 height:20px;
-                border-bottom:10px solid #1976D2;
+                border-bottom:10px solid $other-color;
                 border-left-width: 0px;
                 border-bottom-left-radius: 20px 20px;
                 top:10px;
@@ -257,7 +281,7 @@ export default {
                 position: absolute;
                 width:20px;
                 height:20px;
-                border-bottom:10px solid #1976D2;
+                border-bottom:10px solid $me-color;
                 border-right-width: 0px;
                 border-bottom-right-radius: 20px 20px;
                 top:10px;

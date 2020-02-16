@@ -1,10 +1,12 @@
 <template>
     <div id='alert-msg' class="elevation-10" :style="{backgroundColor:theme,color:theme.isBlack()?'#000':'#fff',top:index*110+20+'px'}">
         <div :style="{overflow:'hidden',display:'flex',alignItems:'center',justifyContent:'space-between'}">
-            <div class="avatar"></div>
+            <div class="avatar">
+                <img :src="serverHost+data.avatar" :style="{width:'100%'}" />
+            </div>
             <div class="right">
                 <div :style="{overflow:'hidden',display:'flex',alignItems:'center',justifyContent:'space-between'}">
-                    <div class="name">好友名</div>
+                    <div class="name">{{data.name}}</div>
                     <v-btn class="clear" icon @click="$store.commit('removeAlertMsg',index)"><v-icon>mdi-notification-clear-all</v-icon></v-btn>
                 </div>
             </div>
@@ -25,6 +27,9 @@ export default {
     computed:{
         theme(){
             return this.$store.state.theme
+        },
+        serverHost(){
+            return this.$store.state.serverHost;
         }
     },
     data(){
@@ -60,7 +65,8 @@ export default {
             width:40px;
             height:40px;
             border-radius: 50%;
-            background-color: green;
+            background-color: #fff;
+            overflow: hidden;
         }
         .right{
             margin-left: 10px;

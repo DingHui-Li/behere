@@ -26,7 +26,7 @@ module.exports = appInfo => {
   config.multipart = {
     mode: 'file',
     fields:'10',
-    fileSize: '200mb',
+    fileSize: '100mb',
     fileExtensions: [
       '.webm',
       '.doc',
@@ -55,6 +55,7 @@ module.exports = appInfo => {
       domainWhiteList: ['*']
   };
 
+    //config.middleware=['verify']
 
   return {
     ...config,

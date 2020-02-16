@@ -2,7 +2,7 @@
     <div id='setting'>
         <v-tabs vertical :color='theme.isBlack()?"#000":theme'>
             <v-tab class="tab-name">常规</v-tab>
-            <v-tab class="tab-name">聊天</v-tab>
+            <v-tab class="tab-name">账号</v-tab>
             <v-tab class="tab-name">关于</v-tab>
             <v-tab-item class="tab-item">
                 <div class="item">
@@ -29,8 +29,10 @@
                     <v-switch v-model='beep' :color='theme'></v-switch>
                 </div>
             </v-tab-item>
-            <v-tab-item>2</v-tab-item>
             <v-tab-item>
+                <Account />
+            </v-tab-item>
+            <v-tab-item class="tab-item">
                 <About />
             </v-tab-item>
         </v-tabs>
@@ -39,8 +41,9 @@
 
 <script>
 import About from './about'
+import Account from './account'
 export default {
-    components:{About},
+    components:{About,Account},
     data(){
         return{
             color:'',
@@ -73,11 +76,16 @@ export default {
         width: 100%;
         height:100%;
         padding:20px;
-        animation-duration: .3s;
+        animation-duration: .5s;
+        animation-timing-function: ease-in-out;
+        background-color: #fff;
+        border-radius: 0 20px 20px 0;
+        overflow: auto;
         .tab-name{
             font-weight: bold;
         }
         .tab-item{
+            height:100%;
             .item{
                 display: flex;
                 align-items: center;

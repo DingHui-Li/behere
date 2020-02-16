@@ -1,7 +1,7 @@
 <template>
     <div id='chat-container' :style="{backgroundColor:theme}">
-        <v-row justify="center" align="center" :style="{height:'100%'}">
-            <v-col xs='12' md='10' xl='8'>
+        <v-row justify="center" align="center" :style="{height:'100%',padding:'0'}">
+            <v-col xs='12' md='10' lg='9' :style="{padding:0}">
                 <div class="panel" >
                         <div class="background" :style="{backgroundColor:theme}"></div>
                         <div class="side-left">
@@ -13,42 +13,67 @@
                             </div>
                             <v-menu>
                                 <template v-slot:activator="{ on }">
-                                    <v-btn class="name" depressed v-on="on">{{myInfo.name}}<v-icon>mdi-chevron-down</v-icon></v-btn>
+                                    <v-btn class="name" depressed v-on="on">
+                                        <span class="text">{{myInfo.name}}</span>
+                                        <v-icon>mdi-chevron-down</v-icon>
+                                    </v-btn>
                                 </template>
                                 <div class="menu">
                                     <div class="item" v-ripple @click="logout"><v-icon>mdi-logout</v-icon> 登出</div>
                                 </div>
                             </v-menu>
                             <div class="tabs">
-                                <div :class="['tab',selectTab.includes('/message')||selectTab==='/'?'select':'']" v-ripple @click="handleClickTab('/message')">
-                                    <v-icon>mdi-chat</v-icon> <span>会话</span>
+                                <div :class="['tab',isSelected('/message')||selectTab==='/'?'select':'']" v-ripple @click="handleClickTab('/message')">
+                                    <transition enter-active-class="animated slideInLeft" leave-active-class="animated slideOutLeft">
+                                        <div class="selected" :style="{backgroundColor:theme}" v-if="isSelected('/message')||selectTab==='/'"></div>
+                                    </transition>
+                                    <v-icon class="icon">mdi-chat</v-icon> 
+                                    <span>会话</span>
                                     <div v-if='chatListBadge>0' class="badge">{{chatListBadge>=99?99:chatListBadge}}</div>
                                     <div v-else class="badge-placeholder"></div>
                                 </div>
-                                <div :class="['tab',selectTab.includes('/friends')?'select':'']" v-ripple @click="handleClickTab('/friends')">
-                                    <v-icon>mdi-pac-man</v-icon> <span>好友</span>
+                                <div :class="['tab',isSelected('/friends')?'select':'']" v-ripple @click="handleClickTab('/friends')">
+                                    <transition enter-active-class="animated slideInLeft" leave-active-class="animated slideOutLeft">
+                                        <div class="selected" :style="{backgroundColor:theme}" v-if="isSelected('/friends')"></div>
+                                    </transition>
+                                    <v-icon class="icon">mdi-pac-man</v-icon> <span>好友</span>
                                     <div v-if='friendListBadge>0' class="badge">{{friendListBadge>=99?99:friendListBadge}}</div>
                                     <div v-else class="badge-placeholder"></div>
                                 </div>
-                                <div :class="['tab',selectTab.includes('/group')?'select':'']" v-ripple @click="handleClickTab('/group')">
-                                    <v-icon>mdi-account-group</v-icon> <span>群组</span>
+                                <div :class="['tab',isSelected('/group')?'select':'']" v-ripple @click="handleClickTab('/group')">
+                                    <transition enter-active-class="animated slideInLeft" leave-active-class="animated slideOutLeft">
+                                        <div class="selected" :style="{backgroundColor:theme}" v-if="isSelected('/group')"></div>
+                                    </transition>
+                                    <v-icon class="icon">mdi-account-group</v-icon> <span>群组</span>
+                                    <div v-if='groupApplyNum' class="badge">{{groupApplyNum>=99?99:groupApplyNum}}</div>
+                                    <div v-else class="badge-placeholder"></div>
+                                </div>
+                                <div :class="['tab',selectTab.includes('/find')?'select':'']" v-ripple @click="handleClickTab('/find')">
+                                    <transition enter-active-class="animated slideInLeft" leave-active-class="animated slideOutLeft">
+                                        <div class="selected" :style="{backgroundColor:theme}" v-if="isSelected('/find')"></div>
+                                    </transition>
+                                    <v-icon class="icon">mdi-compass</v-icon> <span>发现</span>
                                     <div class="badge-placeholder"></div>
                                 </div>
-                                <div :class="['tab',selectTab.includes('/setting')?'select':'']" v-ripple @click="handleClickTab('/setting')">
-                                    <v-icon>mdi-settings</v-icon> <span> 设置</span>
+                                <div :class="['tab',isSelected('/setting')?'select':'']" v-ripple @click="handleClickTab('/setting')">
+                                    <transition enter-active-class="animated slideInLeft" leave-active-class="animated slideOutLeft">
+                                        <div class="selected" :style="{backgroundColor:theme}" v-if="isSelected('/setting')"></div>
+                                    </transition>
+                                    <v-icon class="icon">mdi-settings</v-icon> <span> 设置</span>
                                     <div class="badge-placeholder"></div>
                                 </div>
                             </div>
                         </div>
-                        <div class="content">
-                            <transition :enter-active-class="transition?'animated fadeIn':''" 
-                                :leave-active-class="transition?'animated fadeOut':''" mode="out-in">
+                        <div class="content" >
+                            <transition :enter-active-class="transition?'animated slideInLeft':''" 
+                                :leave-active-class="transition?'animated slideOutLeft':''" mode="out-in">
                                 <keep-alive>
                                     <router-view></router-view>
                                 </keep-alive>
                             </transition>
                         </div>
                         <div class="side-right" @click="$router.push('/social')" v-ripple>
+                            <div class="badge" v-show='socialNum'>{{socialNum>99?99:socialNum}}</div>
                             <v-icon class="icon">mdi-chevron-double-right</v-icon>
                         </div>
                 </div>
@@ -86,27 +111,29 @@ export default {
         },
         chatListBadge(){
             let num=0;
-            let data=this.$store.state.chatList;
-            for(let i in data){
-                num+=data[i].unreadNum
+            let chatList=this.$store.state.chatList;
+            for(let chat of chatList){
+                num+=chat.unreadNum;
             }
             return num;
         },
         friendListBadge(){
-            let num=0;
-            let data=this.$store.state.friendApply;
-            for(let i in data){
-                if(data[i].status==='0'){
-                    num++;
-                }
-            }
-            return num;
+            return this.$store.state.friendApplyNum;
         },
         lineStatus(){
             return this.$store.state.lineStatus;
+        },
+        socialNum(){
+            return this.$store.state.socialNum
+        },
+        groupApplyNum(){
+            return this.$store.state.groupApplyNum
         }
     },
     methods:{
+        isSelected(path){
+            return this.selectTab.includes(path)
+        },
         handleClickTab(router){
             this.$router.push(router);
             this.selectTab=router;
@@ -143,15 +170,18 @@ export default {
         height:100vh;
         position: fixed; 
         .panel{
-            height:80vh;
+            height:90vh;
+            // width:100vw;
             position: relative;
-            border-radius: 10px;
+            border-radius: 30px;
             display: flex;
             padding:20px;
             padding-right: 0;
             overflow: hidden;
+            top:0;
+            left:0;
             min-width: 1000px;
-            min-height: 600px;
+            min-height: 700px;
             .background{
                 position: absolute;
                 width:100%;
@@ -163,8 +193,9 @@ export default {
             .side-left{
                 position: relative;
                 background-color:#fff;
-                border-radius: 5px 0 0 5px;
+                border-radius: 20px 0 0 20px;
                 overflow: auto;
+                overflow: hidden;
                 .avatar-container{
                     position: relative;
                     margin: 20px 50px;
@@ -188,6 +219,13 @@ export default {
                     font-weight: bold;
                     background-color: #fff;
                     width:100%;
+                    overflow: hidden;
+                    .text{
+                        max-width: 100px;
+                        overflow: hidden;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                    }
                 }
                 .tabs{
                     width:100%;
@@ -207,6 +245,21 @@ export default {
                         align-items: center;
                         border-radius: 0 30px 30px 0;
                         overflow: hidden;
+                        position: relative;
+                        .selected{
+                            position: absolute;
+                            width: 100%;
+                            height:100%;
+                            top:0;
+                            left:0;
+                            z-index: 0;
+                            animation-duration: .5s;
+                        }
+                        span,.icon{
+                            z-index: 1;
+                            color:inherit;
+                            //transition: color .2s;
+                        }
                         .badge{
                             width: 20px;
                             height:20px;
@@ -217,6 +270,7 @@ export default {
                             display: flex;
                             justify-content: center;
                             align-items: center;
+                            z-index: 1;
                         }
                         .badge-placeholder{
                             width: 20px;
@@ -224,26 +278,35 @@ export default {
                         }
                     }
                     .select{
-                        background-color: rgba(0,0,0,.2);
+                        color:#fff;
                     }
                 }
             }
             .content{
-                background-color: #fff;
                 flex: 1;
                 position: relative;
                 overflow: hidden;
-                border-radius: 0 5px 5px 0;
+                border-radius: 0 20px 20px 0;
             }
             .side-right{
                 width: 50px;
                 position: relative;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                .badge{
+                    width:25px;
+                    height:25px;
+                    background-color: red;
+                    border-radius: 50%;
+                    text-align: center;
+                    line-height: 25px;
+                    font-size: 0.8rem;
+                    color:#fff;
+                }
                 .icon{
                     color:#fff;
-                    position: absolute;
-                    top: 50%;
-                    left:50%;
-                    transform: translate(-50%,-50%)
                 }
             }
         }

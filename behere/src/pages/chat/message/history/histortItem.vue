@@ -22,7 +22,15 @@ export default {
         user(){
             if(this.data.from===this.myInfo.id){
                 return this.myInfo
-            }else return this.userInfo;
+            }else{
+                if(this.data.groupSn){
+                    return {
+                        avatar:this.data.profilePhoto,
+                        name:this.data.remark?this.data.remark:this.data.nickName
+                    }
+                }
+                return this.userInfo;
+            }
         }
     }
 }

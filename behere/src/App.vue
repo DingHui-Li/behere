@@ -29,7 +29,13 @@
         <v-btn v-else-if='snackbar.login' @click="snackbar.open=false;$router.replace('/login')" depressed :style="{color:'#000'}">去登录</v-btn>
         <v-btn v-else-if='snackbar.reconnect' @click="snackbar.open=false;connectWs()" depressed :style="{color:'#000'}">重新连接</v-btn>
     </v-snackbar>
-    <audio :src='require("./assets/msg.wav")' ref='beep' :style="{display:'none'}"></audio>
+    <v-snackbar :color="snackbar2.color" v-model="snackbar2.open" top :timeout="10000" multi-line :style="{cursor:'pointer'}"
+      @click="$router.push('/social/notify');snackbar2.open=false">
+      <v-avatar><img :src="serverHost+snackbar2.avatar"></v-avatar>
+        {{snackbar2.text}} 
+        <v-btn @click.stop="snackbar2.open=false" icon><v-icon>mdi-close</v-icon></v-btn>
+    </v-snackbar>
+    <audio :src='require("./assets/msg.wav")' ref='beep' :style="{display:'none'}" muted></audio>
   </v-app>
 </template>
 
@@ -52,6 +58,12 @@ export default {
           timeout:0,
           login:false,//登录按钮
           reconnect:false,//重连按钮
+        },
+        snackbar2:{//朋友圈通知
+          open:false,
+          text:'获取数据失败',
+          color:'error',
+          avatar:'/public/avatar.png'
         },
         loading:false
     }
@@ -78,14 +90,29 @@ export default {
       apiHost(){
         return this.$store.state.apiHost;
       },
+      serverHost(){
+        return this.$store.state.serverHost;
+      },
       theme(){
         return this.$store.state.theme
       },
       updateFriendList(){
         return this.$store.state.updateFriendList;
       },
+      updateChatList(){
+        return this.$store.state.updateChatList;
+      },
       beep(){
         return this.$store.state.beep;
+      },
+      updateGroups(){
+        return this.$store.state.updateGroups;
+      },
+      myInfo(){
+        return this.$store.state.myInfo
+      },
+      chatList(){
+        return this.$store.state.chatList;
       }
   },
   watch:{
@@ -101,15 +128,30 @@ export default {
       token(){//token更新时重新设置axios拦截器
             this.axiosInit();
             this.connectWs();
+
             this.getChatList();
             this.getFriendGroup();
             this.getFriendList();
-            this.getFriendApply();
+            this.getGroups();
+            this.getUnreadNum();
       },
       updateFriendList(newVal){
         if(newVal){
           this.getFriendList();
           this.$store.commit('setUpdateFriendList',false);
+        }
+      },
+      updateChatList(newVal){
+          if(newVal){
+            this.getChatList();
+            this.$store.commit('setUpdateChatList',false);
+          }
+      },
+      updateGroups(newVal){
+        if(newVal){
+          this.getGroups();
+          this.getChatList();
+          this.$store.commit('setUpdateGroups',false);
         }
       }
   },
@@ -117,10 +159,6 @@ export default {
     if(localStorage['myInfo']){//获取本地的用户信息
           let data=JSON.parse(localStorage['myInfo']);
           this.$store.commit('updateMyInfo',data);
-          // this.axiosInit();
-          // this.connectWs();
-          // this.getChatList();
-          // this.getFriendList();
       }
   },
   methods:{
@@ -133,6 +171,10 @@ export default {
     },
     connectWs(){
           let ws=new WebSocket(this.$store.state.wsHost+'?token='+this.token);
+          setInterval(() => {
+            ws.send({content:'',type:'heart_tick'})
+            console.log('heart-tick')
+          }, 540000);
           ws.onopen=()=>{
               this.$store.commit('updateLineStatus',true)
               this.snackbar={open:true,text:'消息服务器连接成功',color:'success',timeout:3000}
@@ -148,8 +190,44 @@ export default {
               this.snackbar={open:true,text:'消息服务器断开连接',color:'error',timeout:0,reconnect:true};
           }
           ws.onmessage=(res)=>{
+            console.log(res)
               let data=JSON.parse(res.data);
-              if(data.type==='sys_add'){
+              if(data.type==='logout'){
+                  this.snackbar={open:true,text:data.content,color:'error',timeout:0,login:true};
+              }
+              else if(data.type==='like'){
+                  if(data.from===this.myInfo.id) return
+                  this.snackbar2={text:data.fromInfo.nickName+'  赞了你',color:'info',open:true,avatar:data.fromInfo.profilePhoto}
+                  this.$store.commit('setSocialNum',this.$store.state.socialNum+1)
+              }else if(data.type==='comment'){
+                  if(data.from===this.myInfo.id) return
+                  this.snackbar2={text:data.fromInfo.nickName+'  评论: '+data.content,
+                                  color:'info',open:true,avatar:data.fromInfo.profilePhoto}
+                  this.$store.commit('setSocialNum',this.$store.state.socialNum+1)
+              }
+              else if(data.type==='reply'){
+                  if(data.from===this.myInfo.id) return
+                  this.snackbar2={text:data.fromInfo.nickName+'  回复你：'+data.content,
+                                  color:'info',open:true,avatar:data.fromInfo.profilePhoto}
+                  this.$store.commit('setSocialNum',this.$store.state.socialNum+1)
+              }
+              else if(data.type==='reply'){
+                  if(data.from===this.myInfo.id) return
+                  this.snackbar2={text:data.fromInfo.nickName+'  @了你',color:'info',open:true,avatar:data.fromInfo.profilePhoto}
+                  this.$store.commit('setSocialNum',this.$store.state.socialNum+1)
+              }
+              else if(data.type==='sys_personal_remove'||data.type==='sys_personal_admit'){
+                  this.snackbar={text:data.content,color:'info',open:true}
+                  this.$store.commit('setUpdateFriendList',true)
+                  this.$store.commit('setUpdateChatList',true)
+              }
+              else if(data.type==='sys_group_remove'||data.type==='sys_group_admit'){
+                  this.snackbar={text:data.content,color:'info',open:true}
+                  this.$store.commit('setUpdateChatList',true)
+                  this.$store.commit('setUpdateGroups',true)
+              }
+              else if(data.type==='sys_personal_add'||data.type==='sys_group_add'||data.type==='sys_group_invite'){
+                  this.snackbar={text:data.content,color:'info',open:true}
                   this.$store.commit('addAlterFriendApply',data);
               }
               else if(data.type==='rtc'){
@@ -174,20 +252,39 @@ export default {
                   
               }
               else{
-                if(this.beep==='true'){
+                let mute=this.isMute(data.to);
+                if(this.beep==='true'&&mute==='0'&&data.from!==this.myInfo.id){
                   this.$refs.beep.play();
                 }
+                let exist=false;
+                for(let chat of this.chatList){
+                    if(data.from===chat.contactSn||data.to===chat.contactSn){
+                        exist=true;break;
+                    }
+                }
+                if(!exist) this.getChatList();
                 this.$store.commit('newMsg',{
                   id:data.sn,
                   from:data.from,
+                  to:data.to,
                   content:data.content,
                   time:data.sendTime,
-                  type:data.type
+                  type:data.type,
+                  mute:mute==='1',
+                  route:this.$route.name
                 })
               }
               
           }
           this.$store.commit('updateWs',ws);
+    },
+    isMute(id){
+      for(let chat of this.chatList){
+        if(chat.contactSn===id){
+          return chat.mute
+        }
+      }
+      return '0'
     },
     axiosInit(){
         this.axios.interceptors.request.use(req=>{
@@ -198,30 +295,33 @@ export default {
         this.axios.interceptors.response.use(res=>{
             return res;
           },err=>{
-            console.log(err)
             if(err.response.status===401){
                 this.snackbar={open:true,text:'未登录',login:true,color:'error',timeout:0}
                 this.$router.replace('/login');
             }else{
-                this.snackbar={open:true,text:'服务器错误，code：'+err.response.status,color:'error',timeout:0}
+                this.snackbar={open:true,text:`服务器错误，${err.response.data.data}，code：${err.response.data.code}`,color:'error',timeout:0}
             }
             return Promise.reject(err.response.status);
           })
     },
+
     getChatList(){
       this.loading=true;
       this.axios({
             method:'get',
-            url:this.apiHost+'/chat/getChatList?page=0&size=20'
+            url:this.apiHost+'/chat/getChatList'
         }).then(res=>{
             if(res.data.code==='10000'){
-                let data=JSON.parse(res.data.data).content;
+                let data=JSON.parse(res.data.data);
                 console.log('获取会话列表成功')
                 this.$store.commit('setChatList',data);
             }else{
               this.snackbar={open:true,text:'获取会话列表失败，code:'+res.data.code,color:'error',timeout:10000}
             }
-        }).finally(()=>{
+        }).catch(err=>{
+          console.log(err)
+        })
+        .finally(()=>{
           this.loading=false;
         })
     },
@@ -236,7 +336,6 @@ export default {
                 if(!res.data.data) return;
                 let data=JSON.parse(res.data.data);
                 console.log('获取好友列表成功')
-                console.log(data)
                 this.$store.commit('setFriendList',data);
             }else{
               this.snackbar={open:true,text:'获取好友列表失败，code:'+res.data.code,color:'error',timeout:10000}
@@ -248,35 +347,45 @@ export default {
     getFriendGroup(){
       this.loading=true;
       this.axios({
-                method:'get',
-                url:this.apiHost+'/contactGroup/getGroupList'
-            }).then(res=>{
-                if(res.data.code==='10000'){
-                    let data=JSON.parse(res.data.data);
-                    this.$store.commit('setFriendGroup',data);
-                }else{
-                    this.snackbar={open:true,text:'获取好友分组失败，code:'+res.data.code,color:'error',timeout:10000}
-                }
-            }).finally(()=>{
+          method:'get',
+          url:this.apiHost+'/contactGroup/getGroupList'
+      }).then(res=>{
+          if(res.data.code==='10000'){
+              let data=JSON.parse(res.data.data);
+              this.$store.commit('setFriendGroup',data);
+          }else{
+              this.snackbar={open:true,text:'获取好友分组失败，code:'+res.data.code,color:'error',timeout:10000}
+          }
+      }).finally(()=>{
+        this.loading=false;
+      })
+    },
+    getGroups(){
+        this.loading=true;
+        this.axios({
+            method:'get',
+            url:this.apiHost+'/chat/getChatGroupList'
+        }).then(res=>{
+            if(res.data.code==='10000'){
+                console.log('获取群聊列表成功')
+                let data=JSON.parse(res.data.data)
+                this.$store.commit('setGroups',data);
+            }
+        }).finally(()=>{
           this.loading=false;
         })
     },
-    getFriendApply(){
-      this.loading=true;
+    getUnreadNum(){
       this.axios({
         method:'get',
-        url:this.apiHost+'/message/getContactReqMessage'
+        url:this.apiHost+'/user/getUnreadNum'
       }).then(res=>{
         if(res.data.code==='10000'){
-          console.log('获取申请列表成功')
-          let data=JSON.parse(res.data.data);
-          this.$store.commit('setFriendApply',data.content);
-        }else{
-              this.snackbar={open:true,text:'获取好友申请列表失败，code:'+res.data.code,color:'error',timeout:10000}
+          this.$store.commit('setSocialNum',res.data.data.momentNum)
+          this.$store.commit('setFriendApplyNum',res.data.data.contactNum)
+          this.$store.commit('setGroupApplyNum',res.data.data.groupNum)
         }
-      }).finally(()=>{
-          this.loading=false;
-        })
+      })
     }
   },
 };
@@ -287,6 +396,10 @@ export default {
     padding:0;
     font-family: normal;
     scroll-behavior:smooth;
+  }
+  video{
+      width: 100% !important;
+      height: 100% !important;
   }
   *::-webkit-scrollbar {/*滚动条整体样式*/
           width: 5px;     /*高宽分别对应横竖滚动条的尺寸*/
