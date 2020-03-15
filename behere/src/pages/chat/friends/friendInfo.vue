@@ -331,17 +331,18 @@ export default {
             this.alterInfo('nickName',this.inputName.trim(),'修改昵称成功')
         },
         handleAlterRemark(){
-            if(!this.inputRemark||this.inputRemark.trim().length===0||this.inputRemark.trim().length>15) return;
+            let remark=this.inputRemark.trim()
+            if(!this.inputRemark||remark.length>15) return;
             this.alterRemark=false;
             let backup=this.userInfo.remark;
-            this.userInfo.remark=this.userInfo.remark=this.inputRemark;
+            this.userInfo.remark=remark;
             this.axios({
                 method:'get',
-                url:this.apiHost+`/contact/editRemark?contactSn=${this.userInfo.sn}&remark=${this.inputRemark}`
+                url:this.apiHost+`/contact/editRemark?contactSn=${this.userInfo.sn}&remark=${remark}`
             }).then(res=>{
                 console.log(res)
                 if(res.data.code==='10000'){
-                    this.$store.commit('updateFriendList',{userSn:this.userInfo.sn,type:'remark',value:this.inputRemark})
+                    this.$store.commit('updateFriendList',{userSn:this.userInfo.sn,type:'remark',value:remark})
                     this.snackbar={open:true,color:'success',text:'修改好友备注成功'}
                 }else{
                     this.userInfo.remark=backup;

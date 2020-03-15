@@ -398,6 +398,7 @@ export default {
                         this.$router.replace('/group')
                     }
                     this.snackbar={text:text+'成功',color:'success',open:true}
+                    this.$store.commit('setUpdateChatList',true);
                 }else{
                     this.snackbar={text:text+'失败',color:'error',open:true}
                     this.$store.commit('setUpdateGroups',true);

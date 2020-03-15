@@ -1,15 +1,15 @@
 <template>
     <div id='find'>
         <Users />
-        <!-- <Groups /> -->
+        <Groups />
     </div>
 </template>
 
 <script>
 import Users from './users'
-// import Groups from './groups'
+import Groups from './groups'
 export default {   
-    components:{Users}
+    components:{Users,Groups}
 }
 </script>
 

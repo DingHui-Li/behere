@@ -58,7 +58,7 @@
         </div>
         <div id="msg-container" v-else>
             <div class="avatar" :style="{backgroundColor:theme}" v-ripple @click="$store.commit('updateOpenFriend',userInfo.id);$router.replace('/friends/info')">
-                <v-img :src='serverHost+userInfo.avatar' :style="{height:'100%'}"></v-img>
+                <img :src='serverHost+userInfo.avatar' :style="{height:'100%',width:'100%'}" />
             </div>
             <div class="right">
                 <div class="name" v-if='userInfo.type==="group"'>{{userInfo.name}}</div>
@@ -136,7 +136,6 @@ export default {
         content(){
             try{
                 if(typeof this.data.content==='object'){
-                    console.log(typeof this.data.content)
                     return this.data.content;
                 }else{
                     return JSON.parse(this.data.content)
@@ -223,6 +222,10 @@ export default {
                 z-index:99;
             }
         }
+        .right{
+            overflow: hidden;
+            flex:1;
+        }
         .name{
             margin-left: 10px;
             font-size: 0.8rem
@@ -232,6 +235,8 @@ export default {
             position: relative;
             display: flex;
             align-items:center;
+            overflow: hidden;
+            width: auto;
             .me{
                 background-color: $me-color;
             }

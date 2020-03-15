@@ -93,8 +93,6 @@ export default {
 <style lang='scss' scoped>
     .find-users{
         position: relative;
-        top:50%;
-        transform: translateY(-50%);
         overflow: hidden;
         .top{
             font-weight: bold;

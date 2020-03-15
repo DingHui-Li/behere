@@ -135,12 +135,13 @@ const store=new Vuex.Store({
                         if(state.msgData.length>20) state.msgData.shift();
                     }
                 }else{
+                    let index=exist(data);
                     if(((data.from!==state.openChat&&data.to!==state.openChat)||data.route!=='msg')&&data.from!==state.myInfo.id){//显示通知 没有打开会话
                         if(data.mute) return;//不提醒
                         if(state.alertMsg.length>=3){
                             state.alertMsg.shift();
                         }
-                        state.chatList[i].unreadNum+=1;
+                        state.chatList[index].unreadNum+=1;
                         for(let chat of state.chatList){
                             if(chat.contactSn===data.from||chat.contactSn===data.to){
                                 data.name=chat.remark?chat.remark:chat.nickName;
@@ -152,7 +153,7 @@ const store=new Vuex.Store({
                     }else{
                         state.msgData.push(data);
                         if(state.msgData.length>20) state.msgData.shift();
-                        if(i) state.chatList[i].unreadNum=0;
+                        if(index) state.chatList[index].unreadNum=0;
                     }
                 }
                 
@@ -227,6 +228,7 @@ const store=new Vuex.Store({
                     break;
                 }
             }
+            state.updateChatList=true;
         },
         // addFriend(state,data){//添加一个朋友
         //     state.friendList.unshift(data);
@@ -313,6 +315,7 @@ const store=new Vuex.Store({
                     state.groups.splice(i,1)
                 }
             }
+            state.updateChatList=true;
         },
         updateGroupsItem(state,data){//{id,field,value}
             for(let i in state.groups){//更新群组列表

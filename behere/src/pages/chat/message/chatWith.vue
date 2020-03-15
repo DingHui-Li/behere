@@ -214,7 +214,7 @@ export default {
                 this.text='';
                 let data={
                     id:msgid,
-                    from:this.$store.state.myInfo.id,
+                    from:this.myInfo.id,
                     content:text.trim(),
                     type:'text',
                     to:this.id,
@@ -234,7 +234,8 @@ export default {
                 content,
                 from:this.myInfo.id,
                 to:this.id,
-                type
+                type,
+				groupSn:this.chatInfo.group?this.id:''
             }));
             let exist=false;
             for(let i in this.chatList){
