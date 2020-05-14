@@ -1,0 +1,128 @@
+#friend-info{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    animation-duration: .5s;
+    padding:0;
+    overflow: auto;
+    .top{
+            display: flex;
+            position: relative;
+            margin-top: 50px;
+            justify-content: flex-end;
+            align-items: center;
+            width:100%;
+            .avatar{
+                width:100px;
+                height:100px;
+                border-radius: 50%;
+                margin-right: 50px;
+                overflow: hidden;
+            }
+            .left{
+                flex: 1;
+                position: relative;
+                margin-right: 20px;
+                text-align: right;
+                .name{
+                    font-weight: bold;
+                    font-size: 1.4rem;
+                    .icon{
+                        font-size: 1.8rem;
+                    }
+                }
+                .desc{
+                    overflow: hidden;
+                }
+            }
+        }
+        .friend-info{
+            flex:1;
+            padding-left: 10%;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            .item{
+                padding:10px 20px;
+                display: flex;
+                align-items: center;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                span{
+                    margin-right: 20px;
+                    margin-left: 10px;
+                }
+                .icon{
+                    color:#959595
+                }
+                .tip{
+                    color:#959595
+                }
+            }
+        }
+        .actions{
+            margin-bottom:50px;
+            display: flex;
+            justify-content: space-around;
+            .icon{
+                color:#fff
+            }
+        }
+        .del-add{
+            height:50px;
+            display: flex;
+            flex-direction: column;
+            .btn{
+                flex:1;
+                color:#fff;
+            }
+        }
+}
+.menu{
+    background-color: #fff;
+    cursor: pointer;
+    .select-group{
+        padding:5px 10px;
+    }
+}
+.remark{
+    padding:20px;
+    background-color: #fff;
+    .actions{
+        display: flex;
+        justify-content: space-evenly;
+    }
+}
+.select-sex{
+    background-color: #fff;
+    .item{
+        padding:10px 20px;
+        font-weight: bold;
+        cursor: pointer;
+        .icon{
+            margin-right: 30px;
+        }
+    }
+}
+.alter{
+    background-color: #fff;
+    padding:20px;
+    .actions{
+        text-align: center;
+    }
+}
+
+.loading{
+    position: absolute;
+    width: 100%;
+    height:100%;
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation-duration: .5s;
+    background-color: #fff;
+}
+
