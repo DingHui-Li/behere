@@ -14,7 +14,7 @@
     "core-js": "^3.3.2",
     "epic-spinners": "^1.1.0",
     "js-md5": "^0.7.3",
-    "node-sass": "^4.13.0",
+    "node-sass": "^7.0.0",
     "openvidu-browser": "^2.11.0",
     "sass-loader": "^8.0.0",
     "vue": "^2.6.10",
